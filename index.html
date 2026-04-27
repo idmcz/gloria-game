@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gloria's Adventures</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+  <script src="https://unpkg.com/blockly/msg/en.js"></script>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- STORYLINE SCREEN (shown after Play, before game loads)                -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="storyline-screen" style="display:none;">
+    <div id="storyline-box">
+      <img id="storyline-img" src="" alt="Story" />
+      <div id="storyline-text-card" style="display:none;">The morning of the dance...</div>
+      <div id="storyline-counter">1 / 5</div>
+      <button id="storyline-next-btn">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- PRE-LEVEL CUTSCENE PLACEHOLDER (before each level's objective popup)  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="cutscene-overlay" style="display:none;">
+    <div id="cutscene-box">
+      <div id="cutscene-level-tag">LEVEL 0</div>
+      <div id="cutscene-placeholder">
+        <div id="cutscene-placeholder-inner">
+          <div id="cutscene-placeholder-icon">📷</div>
+          <div id="cutscene-placeholder-text">Level intro image<br>coming soon!</div>
+        </div>
+      </div>
+      <button id="cutscene-continue-btn">Continue ▶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HOME SCREEN (shown first, hides when Play is clicked)                 -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="home-screen">
+    <div id="home-content">
+      <div id="home-title">
+        <span class="home-title-line1">Gloria's</span>
+        <span class="home-title-line2">Adventures</span>
+      </div>
+      <p id="home-subtitle">A coding adventure for kids!</p>
+      <button id="play-btn">▶ PLAY</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- GAME SCREEN (hidden until Play is clicked)                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="game-screen" style="display:none; flex-direction:column; height:100%;">
+
+    <header>
+      <h1>Gloria's Adventures</h1>
+      <p class="subtitle">Help Gloria the Hippo code her way through!</p>
+      <button id="music-toggle-btn" title="Toggle music">🎵</button>
+    </header>
+
+    <main>
+
+      <!-- ── LEFT: Game canvas ──────────────────────────────────────────── -->
+      <section id="game-section">
+        <h2>▶ Game</h2>
+
+        <!-- GLORIA progress bar — lives above the canvas -->
+        <div id="gloria-bar">
+          <span class="gloria-star">★</span>
+          <div class="gloria-track"></div>
+          <div class="gloria-letter done"  data-level="0">G</div>
+          <div class="gloria-letter" data-level="1">L</div>
+          <div class="gloria-letter" data-level="2">O</div>
+          <div class="gloria-letter" data-level="3">R</div>
+          <div class="gloria-letter" data-level="4">I</div>
+          <div class="gloria-letter" data-level="5">A</div>
+          <div class="gloria-letter" data-level="6">🚁</div>
+        </div>
+
+        <div id="phaser-container"></div>
+        <div id="goal-bar">🎯 Goal: Jump twice to complete the level!</div>
+      </section>
+
+      <!-- ── RIGHT: Sidebar ────────────────────────────────────────────── -->
+      <aside id="sidebar">
+
+        <div id="level-indicator">
+          LEVEL 0
+          <span class="level-name">The Test Run</span>
+        </div>
+
+        <div id="info-hint-row">
+          <button id="info-btn" title="Level objective">ℹ</button>
+          <button id="hint-btn" title="Need a hint?">💡 Hint</button>
+          <button id="dict-btn" title="Move Dictionary">📖</button>
+        </div>
+
+        <div id="code-area">
+          <h2>💻 Code</h2>
+          <div id="limit-warning"></div>
+          <div id="blockly-workspace"></div>
+          <button id="run-btn">▶ RUN</button>
+        </div>
+
+      </aside>
+
+    </main>
+
+  </div><!-- /#game-screen -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- LEVEL OBJECTIVE POPUP (generic, used for all levels)                  -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="popup-overlay">
+    <div id="popup-box">
+      <div id="popup-icon"></div>
+      <div id="popup-level-tag">LEVEL 0</div>
+      <div id="popup-title">The Test Run</div>
+      <div id="popup-body"></div>
+      <!-- image slot (hidden unless used) -->
+      <img id="popup-img" src="" alt="" style="display:none; max-width:100%; border-radius:6px; border:2px solid #ff69b4;" />
+      <div id="popup-btn-row">
+        <button id="popup-prev" style="display:none;">◀ Back</button>
+        <button id="popup-close">Let's Go! ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- TUTORIAL WALKTHROUGH OVERLAY (Level 0 only, multi-step)              -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="tutorial-overlay">
+    <div id="tutorial-box">
+      <div id="tutorial-step-tag">STEP 1 / 5</div>
+      <div id="tutorial-title"></div>
+      <div id="tutorial-body"></div>
+      <img id="tutorial-img" src="" alt="" style="display:none; max-width:100%; border-radius:6px; margin-top:8px; border:2px solid #00cc44;" />
+      <div id="tutorial-hint-preview" style="display:none;"></div>
+      <div id="tutorial-btn-row">
+        <button id="tutorial-prev">◀ Back</button>
+        <button id="tutorial-next">Next ▶</button>
+      </div>
+    </div>
+    <!-- Spotlight highlight box (positions over UI elements) -->
+    <div id="tutorial-spotlight"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ENDING SCREEN (shown when Level 6 is won)                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="ending-screen" style="display:none;">
+    <div id="ending-box">
+      <img id="ending-img" src="assets/storyline2_1.png" alt="To be continued" />
+      <div id="ending-title">To be continued...</div>
+      <button id="ending-btn">Play Again ▶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- HINT TOAST                                                            -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- AHA MOMENT OVERLAY (shown after each level win)                      -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="aha-overlay" style="display:none;">
+    <div id="aha-box">
+      <div id="aha-stars">✦ ✦ ✦</div>
+      <div id="aha-icon"></div>
+      <div id="aha-tag">YOU LEARNED!</div>
+      <div id="aha-concept"></div>
+      <div id="aha-body"></div>
+      <button id="aha-btn">Continue ▶</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- BADGE WALL (shown after ending sequence)                             -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="badge-wall" style="display:none;">
+    <div id="badge-wall-inner">
+      <div id="badge-wall-title">🏆 Your Badges!</div>
+      <div id="badge-wall-sub">Look at everything you learned!</div>
+      <div id="badge-grid"></div>
+      <button id="badge-play-again">▶ Play Again</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- MOVE DICTIONARY MODAL                                                -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="move-dict-overlay" style="display:none;">
+    <div id="move-dict-box">
+      <div id="move-dict-title">📖 Move Dictionary</div>
+      <div id="move-dict-sub">What does each block do?</div>
+      <div class="move-dict-entry">
+        <span class="move-dict-icon">⬆️</span>
+        <div>
+          <div class="move-dict-name">Jump</div>
+          <div class="move-dict-desc">Leaps over obstacles AND moves Gloria forward one step!</div>
+        </div>
+      </div>
+      <div class="move-dict-entry">
+        <span class="move-dict-icon">⬇️</span>
+        <div>
+          <div class="move-dict-name">Duck</div>
+          <div class="move-dict-desc">Ducks under obstacles AND moves Gloria forward one step!</div>
+        </div>
+      </div>
+      <div class="move-dict-entry">
+        <span class="move-dict-icon">🦵</span>
+        <div>
+          <div class="move-dict-name">Kick</div>
+          <div class="move-dict-desc">Kicks obstacles away AND moves Gloria forward one step!</div>
+        </div>
+      </div>
+      <div class="move-dict-entry">
+        <span class="move-dict-icon">⬇️</span>
+        <div>
+          <div class="move-dict-name">Move to Next Row</div>
+          <div class="move-dict-desc">Drops Gloria down to the start of the next row. Does NOT move forward!</div>
+        </div>
+      </div>
+      <div class="move-dict-entry">
+        <span class="move-dict-icon">🐾</span>
+        <div>
+          <div class="move-dict-name">Move Forward</div>
+          <div class="move-dict-desc">Walks Gloria one step forward. Used only in early levels!</div>
+        </div>
+      </div>
+      <button id="move-dict-close">Got it! ▶</button>
+    </div>
+  </div>
+
+  <div id="hint-toast"></div>
+
+  <!-- Blockly toolbox XML -->
+  <xml id="toolbox" style="display:none">
+    <category name="Gloria's Moves" colour="#E91E8C">
+      <block type="gloria_move_forward"></block>
+      <block type="gloria_jump"></block>
+      <block type="gloria_duck"></block>
+      <block type="gloria_kick"></block>
+      <block type="gloria_next_row"></block>
+    </category>
+    <category name="Loops" colour="#FF6F00">
+      <block type="gloria_repeat">
+        <value name="TIMES">
+          <block type="math_number">
+            <field name="NUM">5</field>
+          </block>
+        </value>
+      </block>
+    </category>
+  </xml>
+
+  <script src="sounds.js"></script>
+  <script src="music.js"></script>
+  <script src="blockly.js"></script>
+  <script src="game.js"></script>
+
+</body>
+</html>
