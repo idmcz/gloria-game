@@ -1932,7 +1932,9 @@ class Level5Scene extends BaseScene {
               this.tweens.add({ targets: b, alpha: 0, duration: 100, onComplete: () => b.setVisible(false) });
             }
           }
-          this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn', onComplete: resolve });
+          this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn',
+            onComplete: () => { this._checkWin(); resolve(); }
+          });
         }
       });
     }));
