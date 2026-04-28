@@ -146,15 +146,18 @@ function showAhaMoment(levelNum, callback) {
 }
 
 function markProgressDone(levelNum) {
-  const nodes = document.querySelectorAll('.prog-node');
+  const nodes = document.querySelectorAll('.gloria-letter');
   nodes.forEach(n => {
     const lv = parseInt(n.dataset.level);
-    if (lv <= levelNum) n.classList.add('done');
+    if (lv <= levelNum) {
+      n.classList.add('done');
+      n.classList.remove('active');
+    }
   });
 }
 
 function markProgressActive(levelNum) {
-  const nodes = document.querySelectorAll('.prog-node');
+  const nodes = document.querySelectorAll('.gloria-letter');
   nodes.forEach(n => {
     const lv = parseInt(n.dataset.level);
     n.classList.toggle('active', lv === levelNum && !n.classList.contains('done'));
@@ -1275,7 +1278,7 @@ class Level3Scene extends BaseScene {
     this.preloadShared();
     this.load.image('lvl3_bg',     ap('lvl3_background.jpg'));
     this.load.image('bird_spr',    ap('bird.gif'));
-    this.load.image('spider_spr',  ap('spider.gif'));
+    this.load.image('spider_spr',  ap('spider.png'));
   }
 
   create() {
@@ -1463,7 +1466,7 @@ class Level4Scene extends BaseScene {
   constructor() { super({ key: 'Level4' }); }
   preload() {
     this.preloadShared();
-    this.load.image('spider_spr', ap('spider.gif'));
+    this.load.image('spider_spr', ap('spider.png'));
   }
 
   create() {
@@ -1721,7 +1724,7 @@ class Level5Scene extends BaseScene {
   constructor() { super({ key: 'Level5' }); }
   preload() {
     this.preloadShared();
-    this.load.image('spider_g', ap('spider.gif'));
+    this.load.image('spider_g', ap('spider.png'));
   }
 
   create() {
