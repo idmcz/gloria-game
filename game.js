@@ -133,29 +133,33 @@ const _nudgeShown = {};
 // Track failed run attempts per level (hint unlocks at 2, info auto-shows at 3)
 const _failedRuns = {};
 
+// Returns a callback to pass to showTryAgain() — fires after the toast fades.
 function _onFailedRun(levelNum) {
   _failedRuns[levelNum] = (_failedRuns[levelNum] || 0) + 1;
   const fails = _failedRuns[levelNum];
 
-  // At 2 fails: unlock the hint button
+  // At 2 fails: unlock the hint button (shown after the try-again toast fades)
   if (fails === 2) {
-    const hintBtn = document.getElementById('hint-btn');
-    hintBtn.classList.remove('locked');
-    hintBtn.title = 'Need a hint?';
-    // Small nudge that the hint is now available
-    const toast = document.getElementById('hint-toast');
-    toast.textContent = '💡 Hint unlocked! Click the Hint button when you\'re ready.';
-    toast.style.background = '';
-    toast.style.borderColor = '';
-    toast.classList.add('visible');
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('visible'), 3500);
+    return () => {
+      const hintBtn = document.getElementById('hint-btn');
+      hintBtn.classList.remove('locked');
+      hintBtn.title = 'Need a hint?';
+      const toast = document.getElementById('hint-toast');
+      toast.textContent = '💡 Hint unlocked! Click the Hint button when you\'re ready.';
+      toast.style.background = '';
+      toast.style.borderColor = '';
+      toast.classList.add('visible');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('visible'), 3000);
+    };
   }
 
-  // At 3 fails: auto-open the level objective popup
+  // At 3 fails: auto-open the level objective popup after toast fades
   if (fails === 3) {
-    setTimeout(() => showLevelPopup(levelNum), 1900); // wait for reset animation
+    return () => showLevelPopup(levelNum);
   }
+
+  return null;
 }
 
 // Call this when entering a new level to reset failure tracking
@@ -485,8 +489,9 @@ function showHint(levelNum) {
   toast._timer = setTimeout(() => toast.classList.remove('visible'), 6000);
 }
 
-// Show "Try Again!" flash when a run completes without winning
-function showTryAgain() {
+// Show "Try Again!" flash when a run completes without winning.
+// Optional afterCallback fires after the toast fades out.
+function showTryAgain(afterCallback) {
   const toast = document.getElementById('hint-toast');
   toast.textContent = '❌ Not quite! Try a different order or number.';
   toast.style.background = '#c62828';
@@ -497,6 +502,7 @@ function showTryAgain() {
     toast.classList.remove('visible');
     toast.style.background = '';
     toast.style.borderColor = '';
+    if (afterCallback) afterCallback();
   }, 2500);
 }
 
@@ -508,14 +514,14 @@ const TUTORIAL_STEPS = [
   {
     title: 'Welcome to the Moves!',
     body: "See the sidebar on the right?\nThat's where Gloria's moves live!\n\nClick the pink 'Gloria's Moves' tab\nto see all the blocks.\n\n⬆️ Jump — leaps forward AND over things!\n⬇️ Duck — ducks AND moves forward!\n🦵 Kick — kicks AND moves forward!\n⬇️ Next Row — drops to the next row\n\nEvery move includes moving forward!",
-    spotlight: 'blockly-workspace',
+    spotlight: () => Array.from(document.querySelectorAll('.blocklyToolboxCategory')).find(el => el.textContent.includes("Gloria's Moves")),
     img: null,
     hint: null,
   },
   {
     title: 'The Loops Tab! 🔁',
     body: "Now click the orange 'Loops' tab!\n\nInside you'll find the 🔁 Repeat block.\nDrag a number inside it and put\nyour move blocks inside the 'do' slot.\n\nGloria will repeat those moves\nthat many times — like magic!",
-    spotlight: 'blockly-workspace',
+    spotlight: () => Array.from(document.querySelectorAll('.blocklyToolboxCategory')).find(el => el.textContent.includes("Loops")),
     img: null,
     hint: null,
   },
@@ -544,10 +550,18 @@ const TUTORIAL_STEPS = [
 
 let _tutorialStep = 0;
 
-function _spotlightEl(elId) {
+function _spotlightEl(target) {
   const sp = document.getElementById('tutorial-spotlight');
-  if (!elId) { sp.style.display = 'none'; return; }
-  const el = document.getElementById(elId);
+  if (!target) { sp.style.display = 'none'; return; }
+  // target can be an element ID string, a CSS selector (starts with '.'), or a function
+  let el;
+  if (typeof target === 'function') {
+    el = target();
+  } else if (target.startsWith('.') || target.startsWith('[')) {
+    el = document.querySelector(target);
+  } else {
+    el = document.getElementById(target);
+  }
   if (!el) { sp.style.display = 'none'; return; }
   const r = el.getBoundingClientRect();
   const pad = 6;
@@ -722,6 +736,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if (_ahaCallback) { const cb = _ahaCallback; _ahaCallback = null; cb(); }
   });
 
+  // ── Haptics toggle ────────────────────────────────────────────────────────
+  let _hapticsOn = true;
+  window.GameHaptics = {
+    vibrate(pattern) {
+      if (_hapticsOn && navigator.vibrate) navigator.vibrate(pattern);
+    },
+    jump()   { this.vibrate(30); },
+    kick()   { this.vibrate(50); },
+    duck()   { this.vibrate([20, 10, 20]); },
+    win()    { this.vibrate([80, 40, 80, 40, 120]); },
+    fail()   { this.vibrate([60, 30, 60]); },
+    nextRow(){ this.vibrate(40); },
+  };
+  document.getElementById('haptics-toggle-btn').addEventListener('click', function () {
+    _hapticsOn = !_hapticsOn;
+    this.textContent = _hapticsOn ? '📳' : '🔕';
+    this.classList.toggle('muted', !_hapticsOn);
+    this.title = _hapticsOn ? 'Toggle haptics' : 'Haptics off';
+  });
+
   // ── Music toggle ───────────────────────────────────────────────────────────
   let _musicMuted = false;
   document.getElementById('music-toggle-btn').addEventListener('click', function () {
@@ -785,14 +819,14 @@ function clearBlocklyWorkspace() {
   }
 }
 
-// Transition to a new scene, clear Blockly, show cutscene then objective popup
+// Transition to a new scene, clear Blockly, then show objective popup
 function goToScene(currentScene, key, levelNum) {
   console.clear();
   clearBlocklyWorkspace();
   console.log(`→ Starting ${key}`);
   currentScene.scene.start(key);
-  // Show cutscene → popup after brief delay so new scene finishes create()
-  setTimeout(() => showCutscene(levelNum, () => showLevelPopup(levelNum)), 400);
+  // Show popup after brief delay so new scene finishes create()
+  setTimeout(() => showLevelPopup(levelNum), 400);
 }
 
 // ── Shared scene helpers (mixed into each scene via Object.assign) ────────────
@@ -979,7 +1013,7 @@ class Level0Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('🎉 Jump moves forward! Next: use Repeat to do it more!');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(500, 255, 220, 100);
         this.time.delayedCall(2200, () => showAhaMoment(0, () => goToScene(this, 'Level1', 1)));
       });
@@ -1070,7 +1104,7 @@ class Level1Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('🎉 You reached the exit! Loops = power!');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(500, 180, 240, 255);
         this.time.delayedCall(2200, () => showAhaMoment(1, () => goToScene(this, 'Level2', 2)));
       });
@@ -1308,7 +1342,7 @@ class Level2Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('🎉 Grid cleared! Nested loops = POWER! 🧠');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(600, 100, 255, 150);
         this.time.delayedCall(2200, () => showAhaMoment(2, () => goToScene(this, 'Level3', 3)));
       });
@@ -1492,7 +1526,7 @@ class Level3Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('All 3 zones cleared! You are a loop master!');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(800, 255, 200, 255);
         this.time.delayedCall(2200, () => showAhaMoment(3, () => goToScene(this, 'Level4', 4)));
       });
@@ -1753,7 +1787,7 @@ class Level4Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('THE GRAND GRID CLEARED! Nested + Sequential loops = MASTERY! 🧠');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(800, 255, 180, 50);
         this.time.delayedCall(2200, () => showAhaMoment(4, () => goToScene(this, 'Level5', 5)));
       });
@@ -1968,7 +2002,7 @@ class Level5Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('🏆 THE GAUNTLET CLEARED! You are a LOOP MASTER!');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(1000, 255, 180, 50);
         this.time.delayedCall(2200, () => showAhaMoment(5, () => goToScene(this, 'Level6', 6)));
       });
@@ -2105,7 +2139,7 @@ class Level6Scene extends BaseScene {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('You reached the helicopter! Gloria is saved!');
-        if (window.GameAudio) window.GameAudio.win();
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(1000, 255, 240, 100);
         // Float Gloria up to helicopter then show ending screen
         this.tweens.add({
@@ -2157,8 +2191,9 @@ window.runGloriaCode = function(generatedCode) {
   // After all animations finish, check if we won; if not, show try-again
   scene._actionQueue.then(() => {
     if (!scene._done) {
-      showTryAgain();
-      _onFailedRun(window.CURRENT_LEVEL);
+      if (window.GameHaptics) window.GameHaptics.fail();
+      const afterToast = _onFailedRun(window.CURRENT_LEVEL);
+      showTryAgain(afterToast);
       setTimeout(() => {
         if (!scene._done) scene.resetPosition();
       }, 1800);

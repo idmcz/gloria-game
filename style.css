@@ -315,7 +315,7 @@ header .subtitle {
 #music-toggle-btn {
   position: absolute;
   top: 50%;
-  right: 16px;
+  right: 60px;
   transform: translateY(-50%);
   background: none;
   border: 2px solid #ff69b4;
@@ -331,6 +331,25 @@ header .subtitle {
 }
 #music-toggle-btn:hover  { background: #ff69b433; }
 #music-toggle-btn.muted  { color: #ffffff55; border-color: #ffffff33; }
+#haptics-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  background: none;
+  border: 2px solid #ff69b4;
+  border-radius: 8px;
+  color: #ff69b4;
+  font-size: 1.1rem;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+#haptics-toggle-btn:hover { background: #ff69b433; }
+#haptics-toggle-btn.muted { color: #ffffff55; border-color: #ffffff33; }
 
 /* ── Main: 2/3 game | 1/3 sidebar ────────────────────────────────────────────*/
 main {
@@ -370,7 +389,7 @@ main {
 /* ── Goal bar — below canvas ─────────────────────────────────────────────────*/
 #goal-bar {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   color: #90ee90;
   background: linear-gradient(90deg, #1a0a2e 0%, #0a1a0a 100%);
   border: 2px solid #ff69b4;
