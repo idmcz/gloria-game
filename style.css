@@ -370,14 +370,15 @@ main {
 /* ── Goal bar — below canvas ─────────────────────────────────────────────────*/
 #goal-bar {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: #90ee90;
   background: linear-gradient(90deg, #1a0a2e 0%, #0a1a0a 100%);
   border: 2px solid #ff69b4;
-  border-radius: 6px;
+  border-radius: 6px 6px 0 0;
   padding: 10px 16px;
   text-align: center;
-  margin-top: 5px;
+  margin-top: 6px;
+  margin-bottom: 0;
   flex-shrink: 0;
 }
 

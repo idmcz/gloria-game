@@ -1439,7 +1439,7 @@ class Level3Scene extends BaseScene {
 
   _checkWin() {
     if (this._done) return;
-    if (this._jumpIdx >= 5 && this._duckIdx >= 3 && this._kickIdx >= 4) {
+    if (this._jumpIdx === 5 && this._duckIdx === 3 && this._kickIdx === 4) {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('All 3 zones cleared! You are a loop master!');
