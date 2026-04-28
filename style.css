@@ -388,7 +388,7 @@ main {
 /* ── Goal bar (above game canvas) ────────────────────────────────────────────*/
 /* ── Goal bar — below canvas ─────────────────────────────────────────────────*/
 #goal-bar {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Chalkboard SE', 'Chalkboard', 'Comic Sans MS', cursive;
   font-size: 1.45rem;
   color: #90ee90;
   background: linear-gradient(90deg, #1a0a2e 0%, #0a1a0a 100%);
@@ -723,7 +723,7 @@ main {
 }
 
 #popup-body {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Chalkboard SE', 'Chalkboard', 'Comic Sans MS', cursive;
   font-size: 1.15rem;
   color: #e0e0e0;
   line-height: 1.7;
@@ -833,7 +833,7 @@ main {
 }
 
 #tutorial-body {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Chalkboard SE', 'Chalkboard', 'Comic Sans MS', cursive;
   font-size: 1.1rem;
   color: #e0e0e0;
   line-height: 1.7;
@@ -1057,7 +1057,7 @@ main {
   line-height: 1.5;
 }
 #aha-body {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Chalkboard SE', 'Chalkboard', 'Comic Sans MS', cursive;
   font-size: 1.15rem;
   color: #4e342e;
   line-height: 1.7;
