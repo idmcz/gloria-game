@@ -307,12 +307,12 @@ const LEVEL_POPUP_CONFIGS = {
   5: [
     {
       icon: '🏆', levelTag: 'LEVEL 5', title: 'The Gauntlet!',
-      body: "Every row has the SAME pattern:\n🍌🍌 Jump over 2 Bananas!\n🕷🕷 Kick through 2 Spiders!\n🍌🍌 Jump over 2 more Bananas!\nAll 3 rows. No ducking here!\nYou only have 1 of each block!",
+      body: "You have 2 Jump blocks and 2 Kick blocks! Rows 1 and 2 are the same: 🍌🍌🍌 Jump 3 bananas, then 🕷🕷🕷 Kick 3 spiders. But Row 3 is FLIPPED — 🕷🕷🕷 Kick 3 spiders FIRST, then 🍌🍌🍌 Jump 3 bananas! No ducking here!",
       img: null, closeLabel: 'Next ▶', showPrev: false
     },
     {
-      icon: '🎯', levelTag: 'LEARNING OBJECTIVE', title: 'You can chain loops inside one Repeat!',
-      body: "You can put MULTIPLE loops\ninside one outer Repeat!\n\nEach inner loop handles\none type of obstacle,\nthen the next inner loop\ntakes over — all inside\none outer loop!",
+      icon: '🎯', levelTag: 'LEARNING OBJECTIVE', title: 'Sometimes patterns break — and that\'s the puzzle!',
+      body: "Rows 1 and 2 follow the same pattern, so a loop handles them. But Row 3 is different — you have to step outside your loop and write something new. Real coders do this all the time: find the pattern, loop it, then handle the exceptions!",
       img: null, closeLabel: "Let's Go! ▶", showPrev: true
     }
   ],
