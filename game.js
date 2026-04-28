@@ -130,6 +130,44 @@ const AHA_MOMENTS = {
 // Track whether the nudge has been shown for each level
 const _nudgeShown = {};
 
+// Track failed run attempts per level (hint unlocks at 2, info auto-shows at 3)
+const _failedRuns = {};
+
+function _onFailedRun(levelNum) {
+  _failedRuns[levelNum] = (_failedRuns[levelNum] || 0) + 1;
+  const fails = _failedRuns[levelNum];
+
+  // At 2 fails: unlock the hint button
+  if (fails === 2) {
+    const hintBtn = document.getElementById('hint-btn');
+    hintBtn.classList.remove('locked');
+    hintBtn.title = 'Need a hint?';
+    // Small nudge that the hint is now available
+    const toast = document.getElementById('hint-toast');
+    toast.textContent = '💡 Hint unlocked! Click the Hint button when you\'re ready.';
+    toast.style.background = '';
+    toast.style.borderColor = '';
+    toast.classList.add('visible');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => toast.classList.remove('visible'), 3500);
+  }
+
+  // At 3 fails: auto-open the level objective popup
+  if (fails === 3) {
+    setTimeout(() => showLevelPopup(levelNum), 1900); // wait for reset animation
+  }
+}
+
+// Call this when entering a new level to reset failure tracking
+function resetFailedRuns(levelNum) {
+  _failedRuns[levelNum] = 0;
+  const hintBtn = document.getElementById('hint-btn');
+  if (hintBtn) {
+    hintBtn.classList.add('locked');
+    hintBtn.title = 'Try a couple times first!';
+  }
+}
+
 // Aha moment callback (set when showAhaMoment is called)
 let _ahaCallback = null;
 
@@ -193,6 +231,7 @@ function setLevelUI(num, name) {
   const gb = document.getElementById('goal-bar');
   if (gb && LEVEL_INFO[num]) gb.textContent = '🎯 ' + LEVEL_INFO[num].goal;
   markProgressActive(num);
+  resetFailedRuns(num);
   if (typeof window.updateToolboxForLevel === 'function') window.updateToolboxForLevel(num);
 }
 
@@ -651,8 +690,18 @@ document.addEventListener('DOMContentLoaded', function () {
     showLevelPopup(window.CURRENT_LEVEL);
   });
 
-  // ── Hint button (nudge first, real hint on second click) ──────────────────
+  // ── Hint button (locked until 2 fails, then nudge → real hint) ───────────
   document.getElementById('hint-btn').addEventListener('click', function () {
+    if (this.classList.contains('locked')) {
+      const toast = document.getElementById('hint-toast');
+      toast.textContent = '🙈 Give it a couple more tries first — you\'ve got this!';
+      toast.style.background = '';
+      toast.style.borderColor = '';
+      toast.classList.add('visible');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('visible'), 3000);
+      return;
+    }
     const lv = window.CURRENT_LEVEL;
     if (!_nudgeShown[lv]) {
       _nudgeShown[lv] = true;
@@ -2105,6 +2154,7 @@ window.runGloriaCode = function(generatedCode) {
   scene._actionQueue.then(() => {
     if (!scene._done) {
       showTryAgain();
+      _onFailedRun(window.CURRENT_LEVEL);
       setTimeout(() => {
         if (!scene._done) scene.resetPosition();
       }, 1800);

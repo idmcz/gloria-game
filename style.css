@@ -527,6 +527,13 @@ main {
 }
 #hint-btn:hover  { background: #3d2800; }
 #hint-btn:active { transform: translateY(2px); border-bottom-width: 3px; }
+#hint-btn.locked {
+  opacity: 0.38;
+  filter: grayscale(60%);
+  cursor: not-allowed;
+}
+#hint-btn.locked:hover  { background: #2d1b00; }
+#hint-btn.locked:active { transform: none; border-bottom-width: 5px; }
 
 #dict-btn {
   width: 38px;
