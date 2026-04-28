@@ -73,9 +73,9 @@ const LEVEL_INFO = {
   5: {
     icon: '🏆',
     title: 'The Gauntlet',
-    goal: 'Goal: Conquer all 3 rows — banana, spider, banana!',
-    objective: "The MEGA challenge! Every row has the same pattern:\n🍌🍌 Jump over 2 bananas!\n🕷🕷 Kick through 2 spiders!\n🍌🍌 Jump over 2 more bananas!\nRepeat this for all 3 rows!",
-    hint: "Try: Repeat 3 [ Repeat 2[Jump], Repeat 2[Kick], Repeat 2[Jump], Next Row ]"
+    goal: 'Goal: Rows 1 & 2 jump then kick, Row 3 kick then jump!',
+    objective: "The MEGA challenge! You have 2 Jump blocks and 2 Kick blocks. Rows 1 and 2 are the same: 🍌🍌🍌 Jump 3 bananas, then 🕷🕷🕷 Kick 3 spiders. But Row 3 is FLIPPED: 🕷🕷🕷 Kick 3 spiders FIRST, then 🍌🍌🍌 Jump 3 bananas. Think carefully about your loop!",
+    hint: "Rows 1 & 2: Repeat 2 [ Repeat 3[Jump], Repeat 3[Kick], Next Row ]. Row 3: Repeat 3[Kick], Repeat 3[Jump]. You need two separate loops!"
   },
   6: {
     icon: '🚁',
@@ -1764,10 +1764,11 @@ class Level4Scene extends BaseScene {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LEVEL 5 — "The Gauntlet"
-// 3 rows × (banana banana spider spider banana banana). All L→R.
-// Pattern per row: JUMP JUMP  KICK KICK  JUMP JUMP
-// Solution: Repeat 3 [ Repeat 2[Jump], Repeat 2[Kick], Repeat 2[Jump], Next Row ]
-// Block limits: jump:1, kick:1, nextrow:1  (no duck needed)
+// 3 rows × 6 obstacles each.
+// Rows 1 & 2: 🍌🍌🍌 Jump×3, then 🕷🕷🕷 Kick×3
+// Row 3:      🕷🕷🕷 Kick×3 FIRST, then 🍌🍌🍌 Jump×3  (FLIPPED!)
+// Block limits: jump:2, kick:2, nextrow:1
+// Solution: Repeat 2[Repeat 3[Jump], Repeat 3[Kick], Next Row], Repeat 3[Kick], Repeat 3[Jump]
 // ─────────────────────────────────────────────────────────────────────────────
 class Level5Scene extends BaseScene {
   constructor() { super({ key: 'Level5' }); }
@@ -1784,10 +1785,16 @@ class Level5Scene extends BaseScene {
     this.ROW_STEP = 70;
     this.START_X  = 30;
 
-    // bananas per row: 4 (idx 0-1 first half, idx 2-3 second half)
-    // spiders per row: 2
-    this.BANANAS_PER_ROW = 4;
-    this.SPIDERS_PER_ROW = 2;
+    // Rows 1&2: 3 bananas then 3 spiders. Row 3: 3 spiders then 3 bananas.
+    this.BANANAS_PER_ROW = 3;
+    this.SPIDERS_PER_ROW = 3;
+
+    // Gloria start=30, step=90. Obstacle midpoints (halfway through each step):
+    // Pos 1: 75, Pos 2: 165, Pos 3: 255, Pos 4: 345, Pos 5: 435, Pos 6: 525
+    const BANANA_XS_NORMAL = [75, 165, 255];    // rows 1&2: bananas first
+    const SPIDER_XS_NORMAL = [345, 435, 525];   // rows 1&2: spiders after
+    const BANANA_XS_FLIP   = [345, 435, 525];   // row 3: bananas after
+    const SPIDER_XS_FLIP   = [75, 165, 255];    // row 3: spiders first
 
     this.cameras.main.setBackgroundColor('#1a0a2e');
 
@@ -1808,30 +1815,27 @@ class Level5Scene extends BaseScene {
       sg.fillCircle(x, 8 + (i % 5) * 6, 1.5);
     });
 
-    // ── Zone labels (row 1 only for readability) ───────────────────────────
-    // Gloria start=30, step=90
-    // Bananas 1-2 midpoints: 75, 165  (x=30+45, 30+135+45)
-    // Spiders midpoints:     255, 345
-    // Bananas 3-4 midpoints: 435, 525
-    const BANANA_XS = [75, 165, 435, 525];   // 4 bananas: jump×2, then jump×2
-    const SPIDER_XS = [255, 345];             // 2 spiders in the middle: kick×2
-
-    this.add.text(120, this.rowY[0] - 36, '🍌 JUMP×2', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(300, this.rowY[0] - 36, '🕷 KICK×2', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(480, this.rowY[0] - 36, '🍌 JUMP×2', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
+    // ── Zone labels ────────────────────────────────────────────────────────
+    // Row 1 label: Jump×3 then Kick×3
+    this.add.text(165, this.rowY[0] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(435, this.rowY[0] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
+    // Row 2 same pattern
+    this.add.text(165, this.rowY[1] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(435, this.rowY[1] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
+    // Row 3 flipped!
+    this.add.text(165, this.rowY[2] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(435, this.rowY[2] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
 
     // ── Obstacles ─────────────────────────────────────────────────────────
     this.bananaGrid = [];
     this.spiderGrid = [];
 
     for (let r = 0; r < this.ROWS; r++) {
-      this.bananaGrid.push(
-        BANANA_XS.map(x => this.placeBanana(x, this.rowY[r] - 4))
-      );
+      const bXS = r < 2 ? BANANA_XS_NORMAL : BANANA_XS_FLIP;
+      const sXS = r < 2 ? SPIDER_XS_NORMAL : SPIDER_XS_FLIP;
+      this.bananaGrid.push(bXS.map(x => this.placeBanana(x, this.rowY[r] - 4)));
       const spiderY = this.rowY[r] - 25;
-      this.spiderGrid.push(
-        SPIDER_XS.map(x => this.add.image(x, spiderY, 'spider_g').setDisplaySize(44, 44).setDepth(5))
-      );
+      this.spiderGrid.push(sXS.map(x => this.add.image(x, spiderY, 'spider_g').setDisplaySize(44, 44).setDepth(5)));
     }
 
     this.levelBanner('LEVEL 5: The Gauntlet', '#000000cc', '#ff6b35');
@@ -1853,7 +1857,7 @@ class Level5Scene extends BaseScene {
     window._gloriaScene  = this;
     window.CURRENT_LEVEL = 5;
     if (window.GameMusic) window.GameMusic.playIfUnmuted('level5');
-    this.applyLimits({ move: 0, jump: 1, duck: 0, kick: 1, nextrow: 1 });
+    this.applyLimits({ move: 0, jump: 2, duck: 0, kick: 2, nextrow: 1 });
     setLevelUI(5, 'The Gauntlet');
   }
 
@@ -1956,11 +1960,11 @@ class Level5Scene extends BaseScene {
 
   _checkWin() {
     if (this._done) return;
-    const B_TARGET = this.ROWS * this.BANANAS_PER_ROW; // 12
-    const S_TARGET = this.ROWS * this.SPIDERS_PER_ROW; // 6
+    const B_TARGET = this.ROWS * this.BANANAS_PER_ROW; // 9
+    const S_TARGET = this.ROWS * this.SPIDERS_PER_ROW; // 9
     if (this._currentRow >= this.ROWS &&
-        this._clearedBananas >= B_TARGET &&
-        this._clearedSpiders >= S_TARGET) {
+        this._clearedBananas === B_TARGET &&
+        this._clearedSpiders === S_TARGET) {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
         this.statusText.setText('🏆 THE GAUNTLET CLEARED! You are a LOOP MASTER!');
