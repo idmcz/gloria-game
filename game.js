@@ -456,14 +456,29 @@ function showLevelPopup(levelNum) {
   document.getElementById('popup-overlay').classList.add('visible');
 }
 
-// Ending sequence (2 images: storyline2_1 → storyline2_2)
-const ENDING_COUNT = 2;
+// Ending sequence: slide 1=img1, 2=img2, 3=text card "Meanwhile...", 4=img4, 5=img5
+const ENDING_COUNT = 5;
+// Slide index 2 (the 3rd slide) is a text card, not an image
+const ENDING_TEXT_SLIDE = 2;
 let _endingIdx = 0;
 
 function _showEndingFrame(idx) {
   _endingIdx = idx;
-  document.getElementById('ending-img').src =
-    'assets/' + encodeURIComponent('storyline2_' + (idx + 1) + '.png');
+  const img      = document.getElementById('ending-img');
+  const textCard = document.getElementById('ending-text-card');
+
+  if (idx === ENDING_TEXT_SLIDE) {
+    // "Meanwhile..." text card
+    img.style.display      = 'none';
+    textCard.style.display = 'flex';
+  } else {
+    // Image slides — idx 0,1 → files 1,2; idx 3,4 → files 4,5
+    const fileNum = idx < ENDING_TEXT_SLIDE ? idx + 1 : idx + 2;
+    img.src            = 'assets/' + encodeURIComponent('storyline2_' + fileNum + '.png');
+    img.style.display  = 'block';
+    textCard.style.display = 'none';
+  }
+
   document.getElementById('ending-btn').textContent =
     idx < ENDING_COUNT - 1 ? 'Next ▶' : 'Play Again ▶';
 }
