@@ -1874,10 +1874,29 @@ class Level5Scene extends BaseScene {
 
     this.statusText = this.statusLabel('Build your code and hit RUN! ▶', 300);
 
+    // ── Per-row obstacle sequence: 'b'=banana(jump), 's'=spider(kick) ─────
+    // Row 1 & 2: Jump×3 then Kick×3
+    // Row 3: Kick×3 then Jump×3  (DIFFERENT — this is the puzzle!)
+    this.rowSeq = [
+      ['b','b','b','s','s','s'],
+      ['b','b','b','s','s','s'],
+      ['s','s','s','b','b','b'],
+    ];
+    // Build unified ordered obstacle list per row for wrong-move detection
+    this.rowObstacles = [];
+    for (let r = 0; r < this.ROWS; r++) {
+      let bIdx = 0, sIdx = 0;
+      this.rowObstacles.push(this.rowSeq[r].map(type =>
+        type === 'b'
+          ? { type: 'b', sprite: this.bananaGrid[r][bIdx++] }
+          : { type: 's', sprite: this.spiderGrid[r][sIdx++] }
+      ));
+    }
+
+    this._cancelToken    = {};           // changes on reset to drain old queue
     this._actionQueue    = Promise.resolve();
     this._currentRow     = 0;
-    this._jumpIdx        = 0;
-    this._kickIdx        = 0;
+    this._stepIdx        = 0;           // position within current row (0-5)
     this._clearedBananas = 0;
     this._clearedSpiders = 0;
     this._done           = false;
@@ -1890,9 +1909,11 @@ class Level5Scene extends BaseScene {
   }
 
   resetPosition() {
+    // New cancel token makes all pending queued actions no-ops
+    this._cancelToken    = {};
+    this._actionQueue    = Promise.resolve();
     this._currentRow     = 0;
-    this._jumpIdx        = 0;
-    this._kickIdx        = 0;
+    this._stepIdx        = 0;
     this._clearedBananas = 0;
     this._clearedSpiders = 0;
     this._done           = false;
@@ -1901,31 +1922,52 @@ class Level5Scene extends BaseScene {
       this.bananaGrid[r].forEach(b => { b.setVisible(true); b.setAlpha(1); });
       this.spiderGrid[r].forEach(s => { s.setVisible(true); s.setAlpha(1); });
     }
-    this.statusText.setText('Row 1 goes → right, Row 2 goes ← left, Row 3 goes → right!');
+    this.statusText.setText('Row 1 → right, Row 2 ← left, Row 3 → right. Try again!');
   }
 
-  _enqueue(fn) { this._actionQueue = this._actionQueue.then(() => fn()); }
+  _enqueue(fn) {
+    const token = this._cancelToken;
+    this._actionQueue = this._actionQueue.then(() => {
+      if (this._cancelToken !== token) return; // reset happened — skip
+      return fn();
+    });
+  }
+
+  _wrongMove(msg, resolve) {
+    if (window.GameAudio) window.GameAudio.fail?.();
+    this.cameras.main.shake(250, 0.012);
+    this.statusText.setText(msg);
+    this.time.delayedCall(1200, () => { this.resetPosition(); resolve(); });
+  }
 
   jump() {
     this._enqueue(() => new Promise(resolve => {
+      if (this._done) { resolve(); return; }
       const row = this._currentRow;
       if (row >= this.ROWS) { this.statusText.setText('No more rows!'); resolve(); return; }
-      const dir = this.rowDir[row];
-      const idx = this._jumpIdx++;
+      const obs = this.rowObstacles[row][this._stepIdx];
+      if (!obs) { this.statusText.setText('Too many moves — use Next Row! ↩'); resolve(); return; }
+
+      if (obs.type !== 'b') {
+        // Spider here — should kick, not jump
+        this._wrongMove('❌ That\'s a spider — use KICK! Resetting... 🕷', resolve);
+        return;
+      }
+
+      // ✅ Correct jump
+      this._stepIdx++;
+      this._clearedBananas++;
       if (window.GameAudio) window.GameAudio.jump();
-      this.statusText.setText(`Row ${row + 1}: Jump ${idx + 1}! 🍌`);
+      this.statusText.setText(`Row ${row + 1}: Jump! 🍌`);
+      const dir    = this.rowDir[row];
       const startY = this.gloria.y;
       const TOTAL  = 440;
       this.tweens.add({ targets: this.gloria, x: this.gloria.x + dir * this.STEP, duration: TOTAL, ease: 'Linear' });
       this.tweens.add({
         targets: this.gloria, y: startY - this.JUMP_H, duration: TOTAL / 2, ease: 'Sine.easeOut',
         onComplete: () => {
-          if (idx < this.bananaGrid[row].length) {
-            const b = this.bananaGrid[row][idx];
-            if (b.visible) {
-              this._clearedBananas++;
-              this.tweens.add({ targets: b, alpha: 0, duration: 100, onComplete: () => b.setVisible(false) });
-            }
+          if (obs.sprite.visible) {
+            this.tweens.add({ targets: obs.sprite, alpha: 0, duration: 100, onComplete: () => obs.sprite.setVisible(false) });
           }
           this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn',
             onComplete: () => { this._checkWin(); resolve(); }
@@ -1941,23 +1983,31 @@ class Level5Scene extends BaseScene {
 
   kick() {
     this._enqueue(() => new Promise(resolve => {
+      if (this._done) { resolve(); return; }
       const row = this._currentRow;
       if (row >= this.ROWS) { this.statusText.setText('No more rows!'); resolve(); return; }
-      const dir = this.rowDir[row];
-      const idx = this._kickIdx++;
+      const obs = this.rowObstacles[row][this._stepIdx];
+      if (!obs) { this.statusText.setText('Too many moves — use Next Row! ↩'); resolve(); return; }
+
+      if (obs.type !== 's') {
+        // Banana here — should jump, not kick
+        this._wrongMove('❌ That\'s a banana — use JUMP! Resetting... 🍌', resolve);
+        return;
+      }
+
+      // ✅ Correct kick
+      this._stepIdx++;
+      this._clearedSpiders++;
       if (window.GameAudio) window.GameAudio.kick();
-      this.statusText.setText(`Row ${row + 1}: Kick ${idx + 1}! 🕷`);
+      this.statusText.setText(`Row ${row + 1}: Kick! 🕷`);
+      const dir = this.rowDir[row];
       this.gloria.setTexture('gloria_kick');
       this.tweens.add({
         targets: this.gloria, x: this.gloria.x + dir * this.STEP, duration: 340, ease: 'Linear',
         onComplete: () => {
           this.gloria.setTexture('gloria');
-          if (idx < this.spiderGrid[row].length) {
-            const s = this.spiderGrid[row][idx];
-            if (s.visible) {
-              this._clearedSpiders++;
-              this.tweens.add({ targets: s, alpha: 0, duration: 100, onComplete: () => s.setVisible(false) });
-            }
+          if (obs.sprite.visible) {
+            this.tweens.add({ targets: obs.sprite, alpha: 0, duration: 100, onComplete: () => obs.sprite.setVisible(false) });
           }
           this._checkWin(); resolve();
         }
@@ -1968,8 +2018,7 @@ class Level5Scene extends BaseScene {
   nextRow() {
     this._enqueue(() => new Promise(resolve => {
       this._currentRow++;
-      this._jumpIdx = 0;
-      this._kickIdx = 0;
+      this._stepIdx = 0;
 
       if (this._currentRow >= this.ROWS) {
         this._checkWin(); resolve(); return;
