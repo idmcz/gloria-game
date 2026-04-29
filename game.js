@@ -325,7 +325,7 @@ const LEVEL_POPUP_CONFIGS = {
   6: [
     {
       icon: '🚁', levelTag: 'LEVEL 6', title: 'Helicopter Rescue!',
-      body: "Climb 5 steps to the helicopter!\nEach Jump goes UP and FORWARD\nat the same time.\nYou only have 1 Jump block.",
+      body: "Climb 5 steps to the helicopter!\nUse the JUMP block to climb each step!\nEach Jump goes UP and FORWARD\nat the same time.\nYou only have 1 Jump block.",
       img: null, closeLabel: 'Next ▶', showPrev: false
     },
     {
@@ -467,16 +467,27 @@ function _showEndingFrame(idx) {
   const img      = document.getElementById('ending-img');
   const textCard = document.getElementById('ending-text-card');
 
+  const titleEl = document.getElementById('ending-title');
+
   if (idx === ENDING_TEXT_SLIDE) {
     // "Meanwhile..." text card
     img.style.display      = 'none';
     textCard.style.display = 'flex';
+    if (titleEl) titleEl.style.display = 'none';
   } else {
-    // Image slides — idx 0,1 → files 1,2; idx 3,4 → files 4,5
-    const fileNum = idx < ENDING_TEXT_SLIDE ? idx + 1 : idx + 2;
+    // Image slides — idx 0→file1, 1→file2, 3→file4, 4→file5 (always idx+1)
+    const fileNum = idx + 1;
     img.src            = 'assets/' + encodeURIComponent('storyline2_' + fileNum + '.png');
     img.style.display  = 'block';
     textCard.style.display = 'none';
+    if (titleEl) {
+      if (idx === ENDING_COUNT - 1) {
+        titleEl.textContent    = 'The End!';
+        titleEl.style.display  = 'block';
+      } else {
+        titleEl.style.display  = 'none';
+      }
+    }
   }
 
   document.getElementById('ending-btn').textContent =
@@ -1768,16 +1779,31 @@ class Level5Scene extends BaseScene {
     this.ROW_STEP = 70;
     this.START_X  = 30;
 
-    // Rows 1&2: 3 bananas then 3 spiders. Row 3: 3 spiders then 3 bananas.
+    // Zigzag directions: Row1 L→R, Row2 R→L, Row3 L→R
+    this.rowDir    = [1, -1, 1];
+    this.rowStartX = [30, 570, 30];  // Gloria's X at the start of each row
+
     this.BANANAS_PER_ROW = 3;
     this.SPIDERS_PER_ROW = 3;
 
-    // Gloria start=30, step=90. Obstacle midpoints (halfway through each step):
-    // Pos 1: 75, Pos 2: 165, Pos 3: 255, Pos 4: 345, Pos 5: 435, Pos 6: 525
-    const BANANA_XS_NORMAL = [75, 165, 255];    // rows 1&2: bananas first
-    const SPIDER_XS_NORMAL = [345, 435, 525];   // rows 1&2: spiders after
-    const BANANA_XS_FLIP   = [345, 435, 525];   // row 3: bananas after
-    const SPIDER_XS_FLIP   = [75, 165, 255];    // row 3: spiders first
+    // Obstacle midpoints (halfway between Gloria's positions per step):
+    // L→R row: Gloria starts at 30 → steps 120,210,300,390,480,570
+    //   midpoints: 75, 165, 255, 345, 435, 525
+    // R→L row: Gloria starts at 570 → steps 480,390,300,210,120,30
+    //   midpoints: 525, 435, 345, 255, 165, 75
+    //
+    // Row 1 (L→R): Jump×3 (bananas 75,165,255) then Kick×3 (spiders 345,435,525)
+    const BANANA_XS_ROW0 = [75,  165, 255];
+    const SPIDER_XS_ROW0 = [345, 435, 525];
+    // Row 2 (R→L): Jump×3 (bananas 525,435,345) then Kick×3 (spiders 255,165,75)
+    const BANANA_XS_ROW1 = [525, 435, 345];
+    const SPIDER_XS_ROW1 = [255, 165, 75];
+    // Row 3 (L→R): Kick×3 (spiders 75,165,255) then Jump×3 (bananas 345,435,525)
+    const BANANA_XS_ROW2 = [345, 435, 525];
+    const SPIDER_XS_ROW2 = [75,  165, 255];
+
+    const bansPerRow = [BANANA_XS_ROW0, BANANA_XS_ROW1, BANANA_XS_ROW2];
+    const spidPerRow = [SPIDER_XS_ROW0, SPIDER_XS_ROW1, SPIDER_XS_ROW2];
 
     this.cameras.main.setBackgroundColor('#1a0a2e');
 
@@ -1798,37 +1824,51 @@ class Level5Scene extends BaseScene {
       sg.fillCircle(x, 8 + (i % 5) * 6, 1.5);
     });
 
-    // ── Zone labels ────────────────────────────────────────────────────────
-    // Row 1 label: Jump×3 then Kick×3
-    this.add.text(165, this.rowY[0] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(435, this.rowY[0] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
-    // Row 2 same pattern
-    this.add.text(165, this.rowY[1] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(435, this.rowY[1] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
-    // Row 3 flipped!
-    this.add.text(165, this.rowY[2] - 36, '🕷 KICK×3', { fontSize: '8px', color: '#ff9988', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(435, this.rowY[2] - 36, '🍌 JUMP×3', { fontSize: '8px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
+    // ── Direction arrows & zone labels per row ─────────────────────────────
+    const arrowStyle = { fontSize: '11px', color: '#ffffffbb', fontStyle: 'bold' };
+    const jumpStyle  = { fontSize: '8px',  color: '#ffd600',   fontStyle: 'bold' };
+    const kickStyle  = { fontSize: '8px',  color: '#ff9988',   fontStyle: 'bold' };
+
+    // Row 1 (L→R): Jump×3 left zone, Kick×3 right zone
+    this.add.text(400, this.rowY[0] - 50, '→ →', arrowStyle).setOrigin(0.5);
+    this.add.text(165, this.rowY[0] - 36, '🍌 JUMP×3', jumpStyle).setOrigin(0.5);
+    this.add.text(435, this.rowY[0] - 36, '🕷 KICK×3', kickStyle).setOrigin(0.5);
+
+    // Row 2 (R→L): Jump×3 right zone (mirrored), Kick×3 left zone (mirrored)
+    this.add.text(400, this.rowY[1] - 50, '← ←', arrowStyle).setOrigin(0.5);
+    this.add.text(435, this.rowY[1] - 36, '🍌 JUMP×3', jumpStyle).setOrigin(0.5);
+    this.add.text(165, this.rowY[1] - 36, '🕷 KICK×3', kickStyle).setOrigin(0.5);
+
+    // Row 3 (L→R): Kick×3 left zone, Jump×3 right zone
+    this.add.text(400, this.rowY[2] - 50, '→ →', arrowStyle).setOrigin(0.5);
+    this.add.text(165, this.rowY[2] - 36, '🕷 KICK×3', kickStyle).setOrigin(0.5);
+    this.add.text(435, this.rowY[2] - 36, '🍌 JUMP×3', jumpStyle).setOrigin(0.5);
 
     // ── Obstacles ─────────────────────────────────────────────────────────
     this.bananaGrid = [];
     this.spiderGrid = [];
 
     for (let r = 0; r < this.ROWS; r++) {
-      const bXS = r < 2 ? BANANA_XS_NORMAL : BANANA_XS_FLIP;
-      const sXS = r < 2 ? SPIDER_XS_NORMAL : SPIDER_XS_FLIP;
-      this.bananaGrid.push(bXS.map(x => this.placeBanana(x, this.rowY[r] - 4)));
+      this.bananaGrid.push(bansPerRow[r].map(x => this.placeBanana(x, this.rowY[r] - 4)));
       const spiderY = this.rowY[r] - 25;
-      this.spiderGrid.push(sXS.map(x => this.add.image(x, spiderY, 'spider_g').setDisplaySize(44, 44).setDepth(5)));
-      // "starts left" arrow label at the start of each row
-      this.add.text(this.START_X + 2, this.rowY[r] + 16, '↩ starts here', { fontSize: '7px', color: '#ffffff55', fontStyle: 'italic' }).setOrigin(0, 0.5);
+      this.spiderGrid.push(spidPerRow[r].map(x => this.add.image(x, spiderY, 'spider_g').setDisplaySize(44, 44).setDepth(5)));
+
+      // "starts here" label on the correct side per row direction
+      if (this.rowDir[r] === 1) {
+        // L→R: label on the left
+        this.add.text(this.rowStartX[r] + 2, this.rowY[r] + 16, '▶ starts here', { fontSize: '7px', color: '#ffffff55', fontStyle: 'italic' }).setOrigin(0, 0.5);
+      } else {
+        // R→L: label on the right
+        this.add.text(this.rowStartX[r] - 2, this.rowY[r] + 16, 'starts here ◀', { fontSize: '7px', color: '#ffffff55', fontStyle: 'italic' }).setOrigin(1, 0.5);
+      }
     }
 
-    // ── Exit marker at end of Row 3 ───────────────────────────────────────
+    // ── Exit marker at end of Row 3 (right side, L→R) ─────────────────────
     this.placeExit(762, this.rowY[2] - Math.floor(EXIT_H / 2) - 2);
 
     this.levelBanner('LEVEL 5: The Gauntlet', '#000000cc', '#ff6b35');
 
-    this.gloriaStartX = this.START_X;
+    this.gloriaStartX = this.rowStartX[0];
     this.gloriaFloorY = this.rowY[0] - Math.floor(GLORIA_H / 2) - 2;
     this.gloria = this.placeGloria(this.gloriaStartX, this.gloriaFloorY);
 
@@ -1861,7 +1901,7 @@ class Level5Scene extends BaseScene {
       this.bananaGrid[r].forEach(b => { b.setVisible(true); b.setAlpha(1); });
       this.spiderGrid[r].forEach(s => { s.setVisible(true); s.setAlpha(1); });
     }
-    this.statusText.setText('Jump, Kick, Jump every row — mix your moves!');
+    this.statusText.setText('Row 1 goes → right, Row 2 goes ← left, Row 3 goes → right!');
   }
 
   _enqueue(fn) { this._actionQueue = this._actionQueue.then(() => fn()); }
@@ -1870,12 +1910,13 @@ class Level5Scene extends BaseScene {
     this._enqueue(() => new Promise(resolve => {
       const row = this._currentRow;
       if (row >= this.ROWS) { this.statusText.setText('No more rows!'); resolve(); return; }
+      const dir = this.rowDir[row];
       const idx = this._jumpIdx++;
       if (window.GameAudio) window.GameAudio.jump();
       this.statusText.setText(`Row ${row + 1}: Jump ${idx + 1}! 🍌`);
       const startY = this.gloria.y;
       const TOTAL  = 440;
-      this.tweens.add({ targets: this.gloria, x: this.gloria.x + this.STEP, duration: TOTAL, ease: 'Linear' });
+      this.tweens.add({ targets: this.gloria, x: this.gloria.x + dir * this.STEP, duration: TOTAL, ease: 'Linear' });
       this.tweens.add({
         targets: this.gloria, y: startY - this.JUMP_H, duration: TOTAL / 2, ease: 'Sine.easeOut',
         onComplete: () => {
@@ -1902,12 +1943,13 @@ class Level5Scene extends BaseScene {
     this._enqueue(() => new Promise(resolve => {
       const row = this._currentRow;
       if (row >= this.ROWS) { this.statusText.setText('No more rows!'); resolve(); return; }
+      const dir = this.rowDir[row];
       const idx = this._kickIdx++;
       if (window.GameAudio) window.GameAudio.kick();
       this.statusText.setText(`Row ${row + 1}: Kick ${idx + 1}! 🕷`);
       this.gloria.setTexture('gloria_kick');
       this.tweens.add({
-        targets: this.gloria, x: this.gloria.x + this.STEP, duration: 340, ease: 'Linear',
+        targets: this.gloria, x: this.gloria.x + dir * this.STEP, duration: 340, ease: 'Linear',
         onComplete: () => {
           this.gloria.setTexture('gloria');
           if (idx < this.spiderGrid[row].length) {
@@ -1933,11 +1975,14 @@ class Level5Scene extends BaseScene {
         this._checkWin(); resolve(); return;
       }
 
-      const nextY = this.rowY[this._currentRow] - Math.floor(GLORIA_H / 2) - 2;
+      const nextY    = this.rowY[this._currentRow] - Math.floor(GLORIA_H / 2) - 2;
+      const nextX    = this.rowStartX[this._currentRow];
+      const nextDir  = this.rowDir[this._currentRow];
+      const dirLabel = nextDir === 1 ? '▶ now going right!' : '◀ now going left!';
       if (window.GameAudio) window.GameAudio.nextRow();
-      this.statusText.setText(`Dropping to Row ${this._currentRow + 1}! ↩ Back to the left!`);
+      this.statusText.setText(`Dropping to Row ${this._currentRow + 1}! ↩ ${dirLabel}`);
       this.tweens.add({
-        targets: this.gloria, x: this.START_X, y: nextY,
+        targets: this.gloria, x: nextX, y: nextY,
         duration: 500, ease: 'Cubic.easeIn',
         onComplete: resolve
       });
