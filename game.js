@@ -50,18 +50,18 @@ const LEVEL_INFO = {
     hint: "Use the 🔁 Repeat block! Put Move inside it and set it to repeat 5 times."
   },
   2: {
-    icon: '🌀',
-    title: 'The Grid Pt.1',
-    goal: 'Goal: Jump over all 12 bananas across 3 rows!',
-    objective: "The grid is here! 3 rows of 4 bananas.\nJump OVER each banana — don't kick, don't duck, JUMP!\nJump also moves Gloria forward in the row.\nUse Move to Next Row to drop to the next row.",
-    hint: "Try: Repeat 3 [ Repeat 4 [Jump], Move to Next Row ]\nJump moves forward — no separate Move needed!"
-  },
-  3: {
     icon: '⚡',
     title: 'Mixed Obstacles',
     goal: 'Goal: Jump, duck, and kick through every obstacle!',
     objective: "Three zones of trouble!\n5 Bananas → Jump over each (jump moves forward)!\n3 Birds → Duck under each (duck moves forward)!\n4 Spiders → Kick each (kick moves forward)!\nEach group needs its own loop!",
     hint: "Use Repeat 5 [Jump], then Repeat 3 [Duck], then Repeat 4 [Kick].\nEach action moves Gloria forward!"
+  },
+  3: {
+    icon: '🌀',
+    title: 'The Grid Pt.1',
+    goal: 'Goal: Jump over all 12 bananas across 3 rows!',
+    objective: "The grid is here! 3 rows of 4 bananas.\nJump OVER each banana — don't kick, don't duck, JUMP!\nJump also moves Gloria forward in the row.\nUse Move to Next Row to drop to the next row.",
+    hint: "Try: Repeat 3 [ Repeat 4 [Jump], Move to Next Row ]\nJump moves forward — no separate Move needed!"
   },
   4: {
     icon: '🌀',
@@ -101,14 +101,14 @@ const AHA_MOMENTS = {
     body: "Instead of writing Move\n5 times, one Repeat\ndid it all!\nLoops help us avoid\nrepeating ourselves —\njust like shortcuts!"
   },
   2: {
+    icon: '⚡',
+    concept: 'Sequential Loops!',
+    body: "You chained THREE loops\none after another!\nEach loop handled a\ndifferent obstacle.\nSequential loops solve\ncomplex problems step\nby step!"
+  },
+  3: {
     icon: '🌀',
     concept: 'Nested Loops!',
     body: "A loop inside a loop!\nThe inner loop cleared\none row, then the outer\nloop repeated it for\neach row. Loops inside\nloops = SUPER power!"
-  },
-  3: {
-    icon: '⚡',
-    concept: 'Multiple Loops!',
-    body: "You chained THREE loops\none after another!\nEach loop handled a\ndifferent obstacle.\nSequential loops solve\ncomplex problems step\nby step!"
   },
   4: {
     icon: '🧠',
@@ -276,25 +276,25 @@ let _level1PopupStep = 0;
 const LEVEL_POPUP_CONFIGS = {
   2: [
     {
-      icon: '🌀', levelTag: 'LEVEL 2', title: 'The Grid Pt.1',
-      body: "3 rows of bananas ahead!\nUse JUMP to leap over each banana —\nnot Kick, not Duck — JUMP!\nJump also moves Gloria forward.\nUse Next Row to drop between rows.",
-      img: null, closeLabel: 'Next ▶', showPrev: false
-    },
-    {
-      icon: '🎯', levelTag: 'LEARNING OBJECTIVE', title: 'You can nest Repeat blocks!',
-      body: "You can put a Repeat INSIDE\nanother Repeat!\n\nThe inner loop runs fully\nbefore the outer loop moves on.\nThis is called a NESTED loop!",
-      img: null, closeLabel: "Let's Go! ▶", showPrev: true
-    }
-  ],
-  3: [
-    {
-      icon: '⚡', levelTag: 'LEVEL 3', title: 'Mixed Obstacles!',
+      icon: '⚡', levelTag: 'LEVEL 2', title: 'Mixed Obstacles!',
       body: "Three zones of obstacles!\nJump over bananas, Duck under birds,\nKick through spiders!\nEach move goes forward.\nYou only have 1 of each block!",
       img: null, closeLabel: 'Next ▶', showPrev: false
     },
     {
       icon: '🎯', levelTag: 'LEARNING OBJECTIVE', title: 'You can use Repeat blocks sequentially!',
       body: "You can stack multiple Repeat\nblocks one after another!\n\nEach loop handles one job,\nthen the next loop takes over.\nThis is called a SEQUENTIAL loop!",
+      img: null, closeLabel: "Let's Go! ▶", showPrev: true
+    }
+  ],
+  3: [
+    {
+      icon: '🌀', levelTag: 'LEVEL 3', title: 'The Grid Pt.1',
+      body: "3 rows of bananas ahead!\nUse JUMP to leap over each banana —\nnot Kick, not Duck — JUMP!\nJump also moves Gloria forward.\nUse Next Row to drop between rows.",
+      img: null, closeLabel: 'Next ▶', showPrev: false
+    },
+    {
+      icon: '🎯', levelTag: 'LEARNING OBJECTIVE', title: 'You can nest Repeat blocks!',
+      body: "You can put a Repeat INSIDE\nanother Repeat!\n\nThe inner loop runs fully\nbefore the outer loop moves on.\nThis is called a NESTED loop!",
       img: null, closeLabel: "Let's Go! ▶", showPrev: true
     }
   ],
@@ -1149,235 +1149,12 @@ class Level1Scene extends BaseScene {
 // Solution: Repeat 3 [ Repeat 4 [Move, Jump], Move to Next Row ]
 // Block limits: 1 jump, 1 move, 1 nextrow
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// LEVEL 2 — "Mixed Obstacles"
+// 5 bananas (jump), 3 birds (duck), 4 spiders (kick). Sequential loops.
+// ─────────────────────────────────────────────────────────────────────────────
 class Level2Scene extends BaseScene {
   constructor() { super({ key: 'Level2' }); }
-  preload() { this.preloadShared(); }
-
-  create() {
-    this.cameras.main.setBackgroundColor('#1a1a2e');
-
-    // ── Layout constants ──────────────────────────────────────────────────────
-    this.ROWS        = 3;    // banana rows
-    this.COLS        = 4;
-    this.ROW_STEP    = 60;   // vertical px between rows (tighter to fit 4 rows)
-    this.COL_STEP    = 130;  // horizontal px between steps
-    this.ROW_Y0      = 45;   // y of the first platform top
-    this.JUMP_HEIGHT = 50;
-    this.MOVE_STEP   = this.COL_STEP;
-
-    // Row directions: 1 = left→right, -1 = right→left; portal row continues alternating (R→L)
-    this.rowDir = [1, -1, 1, -1];
-
-    this.BANANA_X0   = 160;
-    this.BANANA_XEND = this.BANANA_X0 + (this.COLS - 1) * this.COL_STEP; // 550
-
-    // Gloria's start x — one step before first banana (or rightmost for R→L)
-    this.rowStartX = [
-      this.BANANA_X0 - this.COL_STEP,   // row 0 L→R: 30
-      this.BANANA_XEND + this.COL_STEP, // row 1 R→L: 680
-      this.BANANA_X0 - this.COL_STEP,   // row 2 L→R: 30
-      this.BANANA_XEND + this.COL_STEP, // row 3 portal R→L: 680 (Gloria arrives right side)
-    ];
-
-    // ── Draw row platforms (banana rows + portal row) ─────────────────────────
-    const platformColors = [0xe91e8c, 0x00cc44, 0x9c27b0, 0x00bcd4];
-    this.rowY = [];
-    for (let r = 0; r <= this.ROWS; r++) {   // 0..3 inclusive
-      const platY = this.ROW_Y0 + r * this.ROW_STEP;
-      this.rowY.push(platY);
-      this.add.rectangle(400, platY + 6, 800, 12, platformColors[r]);
-      const label = r < this.ROWS
-        ? `ROW ${r + 1}: ${this.rowDir[r] === 1 ? 'left to right' : 'right to left'}`
-        : 'ROW 4: PORTAL ✨';
-      this.add.text(14, platY - 22, label, {
-        fontSize: '8px', color: '#ffffff88', fontStyle: 'bold'
-      });
-    }
-
-    // Exit portal on the 4th row (row index 3)
-    const exitX = this.BANANA_XEND + this.COL_STEP + 20;
-    const exitY  = this.rowY[3] - Math.floor(EXIT_H / 2) + 4;
-    this.placeExit(exitX, exitY);
-
-    // ── Place bananas at midpoints so Gloria jumps OVER them ──────────────────
-    // Gloria starts at rowStartX (e.g. x=30), each jump moves +COL_STEP.
-    // Banana sits at midpoint = rowStartX + COL_STEP/2 + c*COL_STEP
-    this.bananaGrid = [];
-    for (let r = 0; r < this.ROWS; r++) {
-      const rowBananas = [];
-      const rowStartX = this.rowDir[r] === 1
-        ? this.BANANA_X0 - this.COL_STEP          // L→R: 30
-        : this.BANANA_XEND + this.COL_STEP;       // R→L: 680
-      for (let c = 0; c < this.COLS; c++) {
-        const bx = this.rowDir[r] === 1
-          ? rowStartX + this.COL_STEP / 2 + c * this.COL_STEP   // 95,225,355,485
-          : rowStartX - this.COL_STEP / 2 - c * this.COL_STEP;  // 615,485,355,225
-        const by = this.rowY[r] - 4;
-        rowBananas.push(this.placeBanana(bx, by));
-      }
-      this.bananaGrid.push(rowBananas);
-    }
-
-    // ── Direction arrows on banana rows ──────────────────────────────────────
-    for (let r = 0; r < this.ROWS; r++) {
-      const arrowY = this.rowY[r] - 18;
-      const g = this.add.graphics();
-      g.fillStyle(platformColors[r], 0.3);
-      if (this.rowDir[r] === 1) {
-        g.fillTriangle(this.BANANA_XEND + 50, arrowY, this.BANANA_XEND + 35, arrowY - 8, this.BANANA_XEND + 35, arrowY + 8);
-      } else {
-        g.fillTriangle(this.BANANA_X0 - 50, arrowY, this.BANANA_X0 - 35, arrowY - 8, this.BANANA_X0 - 35, arrowY + 8);
-      }
-    }
-
-    // ── Level banner ──────────────────────────────────────────────────────────
-    this.levelBanner('LEVEL 2: The Grid Pt.1', '#000000cc', '#ff69b4');
-
-    // ── Gloria starts at row 1 start ──────────────────────────────────────────
-    this.gloriaStartX = this.rowStartX[0];
-    this.gloriaFloorY = this.rowY[0] - Math.floor(GLORIA_H / 2) - 2;
-    this.gloria = this.placeGloria(this.gloriaStartX, this.gloriaFloorY);
-
-    // ── Status ────────────────────────────────────────────────────────────────
-    this.statusText = this.statusLabel('Build your code and hit RUN! ▶', 300);
-
-    // ── State ────────────────────────────────────────────────────────────────
-    this._actionQueue    = Promise.resolve();
-    this._currentRow     = 0;
-    this._currentCol     = 0;
-    this._totalJumps     = 0;   // every jump counts, even wasted ones
-    this._clearedBananas = 0;
-    this._done           = false;
-
-    window._gloriaScene  = this;
-    window.CURRENT_LEVEL = 2;
-    if (window.GameMusic) window.GameMusic.playIfUnmuted('level2');
-    this.applyLimits({ move: 0, jump: 1, duck: 999, kick: 999, nextrow: 1 });
-    setLevelUI(2, 'The Grid Pt.1');
-    console.log('Level 2 ready — alternating rows!');
-  }
-
-  resetPosition() {
-    this._currentRow     = 0;
-    this._currentCol     = 0;
-    this._totalJumps     = 0;
-    this._clearedBananas = 0;
-    this._done           = false;
-    this.gloria.setPosition(this.gloriaStartX, this.gloriaFloorY);
-    for (let r = 0; r < this.ROWS; r++) {
-      for (let c = 0; c < this.COLS; c++) {
-        this.bananaGrid[r][c].setVisible(true).setAlpha(1);
-      }
-    }
-    this.statusText.setText('Jump over bananas (jump moves forward), then Move to Next Row!');
-  }
-
-  _enqueue(fn) { this._actionQueue = this._actionQueue.then(() => fn()); }
-
-  moveForward() {
-    this._enqueue(() => new Promise(r => { this.statusText.setText("Jump already moves forward in the row!"); r(); }));
-  }
-
-  // Jump: moves forward in row direction AND clears the banana
-  jump() {
-    this._enqueue(() => new Promise(resolve => {
-      const row = this._currentRow;
-      const dir = this.rowDir[row] || 1;
-      this._currentCol++;
-      this._totalJumps++;                        // count every jump, including wasted ones
-      const col = this._currentCol - 1;
-      if (window.GameAudio) window.GameAudio.jump();
-      this.statusText.setText(`Jumping over banana ${col + 1} in row ${row + 1}!`);
-      const startY = this.gloria.y;
-      const TOTAL  = 450;
-      this.tweens.add({
-        targets: this.gloria, x: this.gloria.x + dir * this.MOVE_STEP,
-        duration: TOTAL, ease: 'Linear'
-      });
-      this.tweens.add({
-        targets: this.gloria, y: startY - this.JUMP_HEIGHT,
-        duration: TOTAL / 2, ease: 'Sine.easeOut',
-        onComplete: () => {
-          if (row < this.ROWS && col >= 0 && col < this.COLS) {
-            const b = this.bananaGrid[row][col];
-            if (b.visible) {
-              this._clearedBananas++;
-              this.tweens.add({ targets: b, alpha: 0, duration: 100,
-                onComplete: () => b.setVisible(false) });
-            }
-          }
-          // Arc down
-          this.tweens.add({
-            targets: this.gloria, y: startY,
-            duration: TOTAL / 2, ease: 'Sine.easeIn',
-            onComplete: resolve
-          });
-        }
-      });
-    }));
-  }
-
-  // Next Row: drop Gloria to start of next row (row 3 = portal row → win)
-  nextRow() {
-    this._enqueue(() => new Promise(resolve => {
-      this._currentRow++;
-      this._currentCol = 0;
-
-      const nextStartX = this.rowStartX[this._currentRow] || this.rowStartX[0];
-      const nextY      = this.rowY[this._currentRow] - Math.floor(GLORIA_H / 2) - 2;
-
-      if (window.GameAudio) window.GameAudio.nextRow();
-      if (this._currentRow === this.ROWS) {
-        // Drop to portal row (row 4) then win
-        this.statusText.setText('Dropping to the portal row! ✨');
-        this.tweens.add({
-          targets: this.gloria, x: nextStartX, y: nextY,
-          duration: 500, ease: 'Cubic.easeIn',
-          onComplete: () => { this._checkWin(); resolve(); }
-        });
-        return;
-      }
-
-      if (this._currentRow > this.ROWS) {
-        this._checkWin(); resolve(); return;
-      }
-
-      const nextDir = this.rowDir[this._currentRow];
-      this.statusText.setText(`Dropping to Row ${this._currentRow + 1} (goes ${nextDir === 1 ? 'left to right' : 'right to left'})! ⬇️`);
-      this.tweens.add({
-        targets: this.gloria, x: nextStartX, y: nextY,
-        duration: 500, ease: 'Cubic.easeIn',
-        onComplete: resolve
-      });
-    }));
-  }
-
-  duck() { this._enqueue(() => new Promise(r => { this.statusText.setText("No ducking here!"); r(); })); }
-  kick() { this._enqueue(() => new Promise(r => { this.statusText.setText("No kicking here!"); r(); })); }
-
-  _checkWin() {
-    if (this._done) return;
-    if (this._currentRow >= this.ROWS &&
-        this._totalJumps === this.ROWS * this.COLS &&
-        this._clearedBananas >= this.ROWS * this.COLS) {
-      this._done = true;
-      this._actionQueue = this._actionQueue.then(() => {
-        this.statusText.setText('🎉 Grid cleared! Nested loops = POWER! 🧠');
-        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
-        this.cameras.main.flash(600, 100, 255, 150);
-        this.time.delayedCall(2200, () => showAhaMoment(2, () => goToScene(this, 'Level3', 3)));
-      });
-    }
-  }
-}
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// LEVEL 3 — "Mixed Obstacles"
-// 5 bananas (jump), 3 birds (duck), 4 boxes (kick). Separate loops per group.
-// ─────────────────────────────────────────────────────────────────────────────
-class Level3Scene extends BaseScene {
-  constructor() { super({ key: 'Level3' }); }
   preload() {
     this.preloadShared();
     this.load.image('lvl3_bg',     ap('lvl3_background.jpg'));
@@ -1390,36 +1167,25 @@ class Level3Scene extends BaseScene {
     this.JUMP_HEIGHT = 80;
 
     this.add.image(400, 170, 'lvl3_bg').setDisplaySize(800, 340).setDepth(-1);
-
     this.drawGround(this.GROUND_Y, 0x6a1b9a, 0x8e24aa);
 
     this.STEP_SIZE   = 55;
     this.DUCK_SIZE   = 55;
-    this.levelBanner('LEVEL 3: Mixed Obstacles', '#ffffffdd', '#4a148c');
+    this.levelBanner('LEVEL 2: Mixed Obstacles', '#ffffffdd', '#4a148c');
 
-    // Zone 1: 5 bananas — placed where Gloria lands after each Jump (start=35, step=55)
     this.bananas = [90, 145, 200, 255, 310].map(x =>
       this.placeBanana(x, this.GROUND_Y - 8));
 
-    // Zone 2: 3 birds — at midpoints of duck zones so Gloria passes OVER them when ducking
-    // After 5 jumps from x=35 (step=55): Gloria at 310. Each duck moves +55.
-    // Duck midpoints: 310+27=337, 365+27=392, 420+27=447
-    // BIRD_Y=205 → bird extends 183-227. Standing Gloria top≈218 (hit). Ducking Gloria top≈232 (clears). ✓
-    const BIRD_Y = this.GROUND_Y - 85;   // 290-85=205
+    const BIRD_Y = this.GROUND_Y - 85;
     this.birds = [337, 392, 447].map(x => {
-      const b = this.add.image(x, BIRD_Y, 'bird_spr').setDisplaySize(52, 44).setDepth(5);
-      return b;
+      return this.add.image(x, BIRD_Y, 'bird_spr').setDisplaySize(52, 44).setDepth(5);
     });
 
-    // Zone 3: 4 spiders (kick) — midpoints of kick zones
-    // After 3 ducks from 310: Gloria at 475. Each kick moves +55. Midpoints: 502, 557, 612, 667
-    const SPIDER_Y = this.GROUND_Y - 28;   // 262 — sitting on ground
+    const SPIDER_Y = this.GROUND_Y - 28;
     this.boxes = [502, 557, 612, 667].map(x => {
-      const s = this.add.image(x, SPIDER_Y, 'spider_spr').setDisplaySize(44, 44).setDepth(5);
-      return s;
+      return this.add.image(x, SPIDER_Y, 'spider_spr').setDisplaySize(44, 44).setDepth(5);
     });
 
-    // Zone labels
     this.add.text(175, this.GROUND_Y - 52, '5x BANANA',
       { fontSize: '9px', color: '#ffd600', fontStyle: 'bold' }).setOrigin(0.5);
     this.add.text(392, BIRD_Y - 30, '3x BIRD',
@@ -1439,10 +1205,10 @@ class Level3Scene extends BaseScene {
     this._done    = false;
 
     window._gloriaScene  = this;
-    window.CURRENT_LEVEL = 3;
-    if (window.GameMusic) window.GameMusic.playIfUnmuted('level3');
+    window.CURRENT_LEVEL = 2;
+    if (window.GameMusic) window.GameMusic.playIfUnmuted('level2');
     this.applyLimits({ move: 0, jump: 1, duck: 1, kick: 1, nextrow: 999 });
-    setLevelUI(3, 'Mixed Obstacles');
+    setLevelUI(2, 'Mixed Obstacles');
   }
 
   resetPosition() {
@@ -1455,7 +1221,6 @@ class Level3Scene extends BaseScene {
   }
 
   _enqueue(fn) { this._actionQueue = this._actionQueue.then(() => fn()); }
-
   moveForward() {
     this._enqueue(() => new Promise(r => { this.statusText.setText("Jump, Duck, and Kick already move forward!"); r(); }));
   }
@@ -1467,23 +1232,15 @@ class Level3Scene extends BaseScene {
       this.statusText.setText(`Jumping over banana ${idx + 1}!`);
       const startY = this.gloria.y;
       const TOTAL  = 500;
+      this.tweens.add({ targets: this.gloria, x: this.gloria.x + 55, duration: TOTAL, ease: 'Linear' });
       this.tweens.add({
-        targets: this.gloria, x: this.gloria.x + 55,
-        duration: TOTAL, ease: 'Linear'
-      });
-      this.tweens.add({
-        targets: this.gloria, y: startY - this.JUMP_HEIGHT,
-        duration: TOTAL / 2, ease: 'Sine.easeOut',
+        targets: this.gloria, y: startY - this.JUMP_HEIGHT, duration: TOTAL / 2, ease: 'Sine.easeOut',
         onComplete: () => {
-          if (idx < this.bananas.length) {
+          if (idx < this.bananas.length)
             this.tweens.add({ targets: this.bananas[idx], alpha: 0, duration: 100,
               onComplete: () => this.bananas[idx].setVisible(false) });
-          }
-          this.tweens.add({
-            targets: this.gloria, y: startY,
-            duration: TOTAL / 2, ease: 'Sine.easeIn',
-            onComplete: () => { this._checkWin(); resolve(); }
-          });
+          this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn',
+            onComplete: () => { this._checkWin(); resolve(); } });
         }
       });
     }));
@@ -1496,23 +1253,15 @@ class Level3Scene extends BaseScene {
       this.statusText.setText(`Ducking under bird ${idx + 1}!`);
       const startY = this.gloria.y;
       const TOTAL  = 500;
+      this.tweens.add({ targets: this.gloria, x: this.gloria.x + 55, duration: TOTAL, ease: 'Linear' });
       this.tweens.add({
-        targets: this.gloria, x: this.gloria.x + 55,
-        duration: TOTAL, ease: 'Linear'
-      });
-      this.tweens.add({
-        targets: this.gloria, y: startY + 14,
-        duration: TOTAL / 2, ease: 'Sine.easeOut',
+        targets: this.gloria, y: startY + 14, duration: TOTAL / 2, ease: 'Sine.easeOut',
         onComplete: () => {
-          if (idx < this.birds.length) {
+          if (idx < this.birds.length)
             this.tweens.add({ targets: this.birds[idx], alpha: 0, duration: 120,
               onComplete: () => this.birds[idx].setVisible(false) });
-          }
-          this.tweens.add({
-            targets: this.gloria, y: startY,
-            duration: TOTAL / 2, ease: 'Sine.easeIn',
-            onComplete: () => { this._checkWin(); resolve(); }
-          });
+          this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn',
+            onComplete: () => { this._checkWin(); resolve(); } });
         }
       });
     }));
@@ -1525,14 +1274,12 @@ class Level3Scene extends BaseScene {
       this.statusText.setText(`Kicking spider ${idx + 1} — moving forward!`);
       this.gloria.setTexture('gloria_kick');
       this.tweens.add({
-        targets: this.gloria, x: this.gloria.x + 55,
-        duration: 340, ease: 'Linear',
+        targets: this.gloria, x: this.gloria.x + 55, duration: 340, ease: 'Linear',
         onComplete: () => {
           this.gloria.setTexture('gloria');
-          if (idx < this.boxes.length) {
+          if (idx < this.boxes.length)
             this.tweens.add({ targets: this.boxes[idx], alpha: 0, duration: 100,
               onComplete: () => this.boxes[idx].setVisible(false) });
-          }
           this._checkWin(); resolve();
         }
       });
@@ -1546,9 +1293,190 @@ class Level3Scene extends BaseScene {
     if (this._jumpIdx === 5 && this._duckIdx === 3 && this._kickIdx === 4) {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
-        this.statusText.setText('All 3 zones cleared! You are a loop master!');
+        this.statusText.setText('All 3 zones cleared! Sequential loops = POWER!');
         if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
         this.cameras.main.flash(800, 255, 200, 255);
+        this.time.delayedCall(2200, () => showAhaMoment(2, () => goToScene(this, 'Level3', 3)));
+      });
+    }
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEVEL 3 — "The Grid Pt.1"
+// 3 rows of bananas, alternating L→R and R→L. Nested loops.
+// ─────────────────────────────────────────────────────────────────────────────
+class Level3Scene extends BaseScene {
+  constructor() { super({ key: 'Level3' }); }
+  preload() { this.preloadShared(); }
+
+  create() {
+    this.cameras.main.setBackgroundColor('#1a1a2e');
+
+    this.ROWS        = 3;
+    this.COLS        = 4;
+    this.ROW_STEP    = 60;
+    this.COL_STEP    = 130;
+    this.ROW_Y0      = 45;
+    this.JUMP_HEIGHT = 50;
+    this.MOVE_STEP   = this.COL_STEP;
+
+    this.rowDir = [1, -1, 1, -1];
+
+    this.BANANA_X0   = 160;
+    this.BANANA_XEND = this.BANANA_X0 + (this.COLS - 1) * this.COL_STEP;
+
+    this.rowStartX = [
+      this.BANANA_X0 - this.COL_STEP,
+      this.BANANA_XEND + this.COL_STEP,
+      this.BANANA_X0 - this.COL_STEP,
+      this.BANANA_XEND + this.COL_STEP,
+    ];
+
+    const platformColors = [0xe91e8c, 0x00cc44, 0x9c27b0, 0x00bcd4];
+    this.rowY = [];
+    for (let r = 0; r <= this.ROWS; r++) {
+      const platY = this.ROW_Y0 + r * this.ROW_STEP;
+      this.rowY.push(platY);
+      this.add.rectangle(400, platY + 6, 800, 12, platformColors[r]);
+      const label = r < this.ROWS
+        ? `ROW ${r + 1}: ${this.rowDir[r] === 1 ? 'left to right' : 'right to left'}`
+        : 'ROW 4: PORTAL ✨';
+      this.add.text(14, platY - 22, label, { fontSize: '8px', color: '#ffffff88', fontStyle: 'bold' });
+    }
+
+    const exitX = this.BANANA_XEND + this.COL_STEP + 20;
+    const exitY  = this.rowY[3] - Math.floor(EXIT_H / 2) + 4;
+    this.placeExit(exitX, exitY);
+
+    this.bananaGrid = [];
+    for (let r = 0; r < this.ROWS; r++) {
+      const rowBananas = [];
+      const rowStartX = this.rowDir[r] === 1
+        ? this.BANANA_X0 - this.COL_STEP
+        : this.BANANA_XEND + this.COL_STEP;
+      for (let c = 0; c < this.COLS; c++) {
+        const bx = this.rowDir[r] === 1
+          ? rowStartX + this.COL_STEP / 2 + c * this.COL_STEP
+          : rowStartX - this.COL_STEP / 2 - c * this.COL_STEP;
+        rowBananas.push(this.placeBanana(bx, this.rowY[r] - 4));
+      }
+      this.bananaGrid.push(rowBananas);
+    }
+
+    for (let r = 0; r < this.ROWS; r++) {
+      const arrowY = this.rowY[r] - 18;
+      const g = this.add.graphics();
+      g.fillStyle(platformColors[r], 0.3);
+      if (this.rowDir[r] === 1) {
+        g.fillTriangle(this.BANANA_XEND + 50, arrowY, this.BANANA_XEND + 35, arrowY - 8, this.BANANA_XEND + 35, arrowY + 8);
+      } else {
+        g.fillTriangle(this.BANANA_X0 - 50, arrowY, this.BANANA_X0 - 35, arrowY - 8, this.BANANA_X0 - 35, arrowY + 8);
+      }
+    }
+
+    this.levelBanner('LEVEL 3: The Grid Pt.1', '#000000cc', '#ff69b4');
+
+    this.gloriaStartX = this.rowStartX[0];
+    this.gloriaFloorY = this.rowY[0] - Math.floor(GLORIA_H / 2) - 2;
+    this.gloria = this.placeGloria(this.gloriaStartX, this.gloriaFloorY);
+
+    this.statusText = this.statusLabel('Build your code and hit RUN! ▶', 300);
+
+    this._actionQueue    = Promise.resolve();
+    this._currentRow     = 0;
+    this._currentCol     = 0;
+    this._totalJumps     = 0;
+    this._clearedBananas = 0;
+    this._done           = false;
+
+    window._gloriaScene  = this;
+    window.CURRENT_LEVEL = 3;
+    if (window.GameMusic) window.GameMusic.playIfUnmuted('level3');
+    this.applyLimits({ move: 0, jump: 1, duck: 999, kick: 999, nextrow: 1 });
+    setLevelUI(3, 'The Grid Pt.1');
+  }
+
+  resetPosition() {
+    this._currentRow     = 0;
+    this._currentCol     = 0;
+    this._totalJumps     = 0;
+    this._clearedBananas = 0;
+    this._done           = false;
+    this.gloria.setPosition(this.gloriaStartX, this.gloriaFloorY);
+    for (let r = 0; r < this.ROWS; r++)
+      for (let c = 0; c < this.COLS; c++)
+        this.bananaGrid[r][c].setVisible(true).setAlpha(1);
+    this.statusText.setText('Jump over bananas (jump moves forward), then Move to Next Row!');
+  }
+
+  _enqueue(fn) { this._actionQueue = this._actionQueue.then(() => fn()); }
+  moveForward() {
+    this._enqueue(() => new Promise(r => { this.statusText.setText("Jump already moves forward in the row!"); r(); }));
+  }
+
+  jump() {
+    this._enqueue(() => new Promise(resolve => {
+      const row = this._currentRow;
+      const dir = this.rowDir[row] || 1;
+      this._currentCol++;
+      this._totalJumps++;
+      const col = this._currentCol - 1;
+      if (window.GameAudio) window.GameAudio.jump();
+      this.statusText.setText(`Jumping over banana ${col + 1} in row ${row + 1}!`);
+      const startY = this.gloria.y;
+      const TOTAL  = 450;
+      this.tweens.add({ targets: this.gloria, x: this.gloria.x + dir * this.MOVE_STEP, duration: TOTAL, ease: 'Linear' });
+      this.tweens.add({
+        targets: this.gloria, y: startY - this.JUMP_HEIGHT, duration: TOTAL / 2, ease: 'Sine.easeOut',
+        onComplete: () => {
+          if (row < this.ROWS && col >= 0 && col < this.COLS) {
+            const b = this.bananaGrid[row][col];
+            if (b.visible) {
+              this._clearedBananas++;
+              this.tweens.add({ targets: b, alpha: 0, duration: 100, onComplete: () => b.setVisible(false) });
+            }
+          }
+          this.tweens.add({ targets: this.gloria, y: startY, duration: TOTAL / 2, ease: 'Sine.easeIn', onComplete: resolve });
+        }
+      });
+    }));
+  }
+
+  nextRow() {
+    this._enqueue(() => new Promise(resolve => {
+      this._currentRow++;
+      this._currentCol = 0;
+      const nextStartX = this.rowStartX[this._currentRow] || this.rowStartX[0];
+      const nextY      = this.rowY[this._currentRow] - Math.floor(GLORIA_H / 2) - 2;
+      if (window.GameAudio) window.GameAudio.nextRow();
+      if (this._currentRow === this.ROWS) {
+        this.statusText.setText('Dropping to the portal row! ✨');
+        this.tweens.add({ targets: this.gloria, x: nextStartX, y: nextY, duration: 500, ease: 'Cubic.easeIn',
+          onComplete: () => { this._checkWin(); resolve(); } });
+        return;
+      }
+      if (this._currentRow > this.ROWS) { this._checkWin(); resolve(); return; }
+      const nextDir = this.rowDir[this._currentRow];
+      this.statusText.setText(`Dropping to Row ${this._currentRow + 1} (goes ${nextDir === 1 ? 'left to right' : 'right to left'})! ⬇️`);
+      this.tweens.add({ targets: this.gloria, x: nextStartX, y: nextY, duration: 500, ease: 'Cubic.easeIn', onComplete: resolve });
+    }));
+  }
+
+  duck() { this._enqueue(() => new Promise(r => { this.statusText.setText("No ducking here!"); r(); })); }
+  kick() { this._enqueue(() => new Promise(r => { this.statusText.setText("No kicking here!"); r(); })); }
+
+  _checkWin() {
+    if (this._done) return;
+    if (this._currentRow >= this.ROWS &&
+        this._totalJumps === this.ROWS * this.COLS &&
+        this._clearedBananas >= this.ROWS * this.COLS) {
+      this._done = true;
+      this._actionQueue = this._actionQueue.then(() => {
+        this.statusText.setText('🎉 Grid cleared! Nested loops = POWER! 🧠');
+        if (window.GameAudio) window.GameAudio.win(); if (window.GameHaptics) window.GameHaptics.win();
+        this.cameras.main.flash(600, 100, 255, 150);
         this.time.delayedCall(2200, () => showAhaMoment(3, () => goToScene(this, 'Level4', 4)));
       });
     }
