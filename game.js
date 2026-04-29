@@ -138,8 +138,8 @@ function _onFailedRun(levelNum) {
   _failedRuns[levelNum] = (_failedRuns[levelNum] || 0) + 1;
   const fails = _failedRuns[levelNum];
 
-  // At 1 fail: unlock the hint button (shown after the try-again toast fades)
-  if (fails === 1) {
+  // At 2 fails: unlock the hint button (shown after the try-again toast fades)
+  if (fails === 2) {
     return () => {
       const hintBtn = document.getElementById('hint-btn');
       hintBtn.classList.remove('locked');
