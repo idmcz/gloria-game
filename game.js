@@ -1876,7 +1876,12 @@ class Level5Scene extends BaseScene {
       this.bananaGrid.push(bXS.map(x => this.placeBanana(x, this.rowY[r] - 4)));
       const spiderY = this.rowY[r] - 25;
       this.spiderGrid.push(sXS.map(x => this.add.image(x, spiderY, 'spider_g').setDisplaySize(44, 44).setDepth(5)));
+      // "starts left" arrow label at the start of each row
+      this.add.text(this.START_X + 2, this.rowY[r] + 16, '↩ starts here', { fontSize: '7px', color: '#ffffff55', fontStyle: 'italic' }).setOrigin(0, 0.5);
     }
+
+    // ── Exit marker at end of Row 3 ───────────────────────────────────────
+    this.placeExit(762, this.rowY[2] - Math.floor(EXIT_H / 2) - 2);
 
     this.levelBanner('LEVEL 5: The Gauntlet', '#000000cc', '#ff6b35');
 
@@ -1987,7 +1992,7 @@ class Level5Scene extends BaseScene {
 
       const nextY = this.rowY[this._currentRow] - Math.floor(GLORIA_H / 2) - 2;
       if (window.GameAudio) window.GameAudio.nextRow();
-      this.statusText.setText(`Dropping to Row ${this._currentRow + 1}! ⬇️`);
+      this.statusText.setText(`Dropping to Row ${this._currentRow + 1}! ↩ Back to the left!`);
       this.tweens.add({
         targets: this.gloria, x: this.START_X, y: nextY,
         duration: 500, ease: 'Cubic.easeIn',
@@ -2004,8 +2009,8 @@ class Level5Scene extends BaseScene {
     if (this._done) return;
     const B_TARGET = this.ROWS * this.BANANAS_PER_ROW; // 9
     const S_TARGET = this.ROWS * this.SPIDERS_PER_ROW; // 9
-    if (this._currentRow >= this.ROWS &&
-        this._clearedBananas === B_TARGET &&
+    // Don't require nextRow after last row — just check all obstacles cleared
+    if (this._clearedBananas === B_TARGET &&
         this._clearedSpiders === S_TARGET) {
       this._done = true;
       this._actionQueue = this._actionQueue.then(() => {
