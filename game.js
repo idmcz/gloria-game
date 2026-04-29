@@ -92,8 +92,8 @@ const LEVEL_INFO = {
 const AHA_MOMENTS = {
   0: {
     icon: '⭐',
-    concept: 'Jumping = Moving!',
-    body: "Did you notice?\nEvery Jump moved Gloria\nforward automatically!\nIn coding, ONE action\ncan do multiple things\nat once!"
+    concept: 'You wrote a program!',
+    body: "You just wrote real code! When you stack blocks one after another, the computer carries out each step in order — top to bottom, just like reading a list. That's how ALL programs work!"
   },
   1: {
     icon: '🔁',
@@ -138,8 +138,8 @@ function _onFailedRun(levelNum) {
   _failedRuns[levelNum] = (_failedRuns[levelNum] || 0) + 1;
   const fails = _failedRuns[levelNum];
 
-  // At 2 fails: unlock the hint button (shown after the try-again toast fades)
-  if (fails === 2) {
+  // At 1 fail: unlock the hint button (shown after the try-again toast fades)
+  if (fails === 1) {
     return () => {
       const hintBtn = document.getElementById('hint-btn');
       hintBtn.classList.remove('locked');
@@ -167,8 +167,14 @@ function resetFailedRuns(levelNum) {
   _failedRuns[levelNum] = 0;
   const hintBtn = document.getElementById('hint-btn');
   if (hintBtn) {
-    hintBtn.classList.add('locked');
-    hintBtn.title = 'Try a couple times first!';
+    // Level 0 is the tutorial — hints always available
+    if (levelNum === 0) {
+      hintBtn.classList.remove('locked');
+      hintBtn.title = 'Need a hint?';
+    } else {
+      hintBtn.classList.add('locked');
+      hintBtn.title = 'Give it one try first!';
+    }
   }
 }
 
@@ -513,14 +519,14 @@ function showTryAgain(afterCallback) {
 const TUTORIAL_STEPS = [
   {
     title: 'Welcome to the Moves!',
-    body: "See the sidebar on the right?\nThat's where Gloria's moves live!\n\nClick the pink 'Gloria's Moves' tab\nto see all the blocks.\n\n⬆️ Jump — leaps forward AND over things!\n⬇️ Duck — ducks AND moves forward!\n🦵 Kick — kicks AND moves forward!\n⬇️ Next Row — drops to the next row\n\nEvery move includes moving forward!",
+    body: "See the sidebar on the right?\nThat's where Gloria's moves live!\n\nClick the pink 'Gloria's Moves' tab\nto see all the blocks.\n\n⬆️ Jump — leaps forward AND over things!\n⬇️ Duck — ducks AND moves forward!\n🦵 Kick — kicks AND moves forward!\n⬇️ Next Row — drops to the next row\n\n---\nEvery move includes moving forward!",
     spotlight: () => Array.from(document.querySelectorAll('.blocklyToolboxCategory')).find(el => el.textContent.includes("Gloria's Moves")),
     img: null,
     hint: null,
   },
   {
     title: 'The Loops Tab! 🔁',
-    body: "Now click the orange 'Loops' tab!\n\nInside you'll find the 🔁 Repeat block.\nDrag a number inside it and put\nyour move blocks inside the 'do' slot.\n\nGloria will repeat those moves\nthat many times — like magic!",
+    body: "Now click the orange 'Loops' tab!\n\nInside you'll find the 🔁 Repeat block.\nDrag your move blocks inside the 'do' slot — and type a number straight into the white box to set how many times to repeat!\n\nGloria will repeat those moves\nthat many times — like magic!",
     spotlight: () => Array.from(document.querySelectorAll('.blocklyToolboxCategory')).find(el => el.textContent.includes("Loops")),
     img: null,
     hint: null,
