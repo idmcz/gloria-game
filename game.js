@@ -456,38 +456,38 @@ function showLevelPopup(levelNum) {
   document.getElementById('popup-overlay').classList.add('visible');
 }
 
-// Ending sequence: slide 1=img1, 2=img2, 3=text card "Meanwhile...", 4=img4, 5=img5
-const ENDING_COUNT = 5;
-// Slide index 2 (the 3rd slide) is a text card, not an image
-const ENDING_TEXT_SLIDE = 2;
+// Ending sequence:
+//   idx 0 → storyline2_1.png
+//   idx 1 → storyline2_2.png
+//   idx 2 → text card "Meanwhile..."
+//   idx 3 → storyline2_4.png
+//   idx 4 → storyline2_5.png
+//   idx 5 → text card "The End!"
+const ENDING_COUNT       = 6;
+const ENDING_MEANWHILE   = 2;   // "Meanwhile..." text card
+const ENDING_THE_END     = 5;   // "The End!"    text card
 let _endingIdx = 0;
 
 function _showEndingFrame(idx) {
   _endingIdx = idx;
   const img      = document.getElementById('ending-img');
   const textCard = document.getElementById('ending-text-card');
+  const titleEl  = document.getElementById('ending-title');
 
-  const titleEl = document.getElementById('ending-title');
+  const isTextSlide = (idx === ENDING_MEANWHILE || idx === ENDING_THE_END);
 
-  if (idx === ENDING_TEXT_SLIDE) {
-    // "Meanwhile..." text card
+  if (isTextSlide) {
     img.style.display      = 'none';
+    textCard.textContent   = idx === ENDING_MEANWHILE ? 'Meanwhile...' : 'The End! 🎉';
     textCard.style.display = 'flex';
     if (titleEl) titleEl.style.display = 'none';
   } else {
-    // Image slides — idx 0→file1, 1→file2, 3→file4, 4→file5 (always idx+1)
+    // idx 0→file1, 1→file2, 3→file4, 4→file5 (idx+1 works for all image slides)
     const fileNum = idx + 1;
-    img.src            = 'assets/' + encodeURIComponent('storyline2_' + fileNum + '.png');
+    img.src            = 'assets/storyline2_' + fileNum + '.png';
     img.style.display  = 'block';
     textCard.style.display = 'none';
-    if (titleEl) {
-      if (idx === ENDING_COUNT - 1) {
-        titleEl.textContent    = 'The End!';
-        titleEl.style.display  = 'block';
-      } else {
-        titleEl.style.display  = 'none';
-      }
-    }
+    if (titleEl) titleEl.style.display = 'none';
   }
 
   document.getElementById('ending-btn').textContent =
@@ -2054,8 +2054,15 @@ class Level6Scene extends BaseScene {
       if (i > 0) {
         this.add.text(px + 8, py - 14, `STEP ${i}`,
           { fontSize: '7px', color: '#ffffff99', fontStyle: 'bold' });
+        // Jump arrow on each step edge
+        this.add.text(px - 4, py - 32, '⬆️ JUMP', { fontSize: '9px', color: '#ffeb3b', fontStyle: 'bold' }).setOrigin(0.5);
       }
     }
+    // Big hint banner below staircase
+    this.add.text(300, BASE_Y + 30, '⬆️  Use JUMP to climb each step!', {
+      fontSize: '13px', color: '#1a237e', fontStyle: 'bold',
+      backgroundColor: '#ffffffcc', padding: { x: 10, y: 5 }
+    }).setOrigin(0.5);
 
     // Helicopter at top-right
     const HELI_X = 705;
