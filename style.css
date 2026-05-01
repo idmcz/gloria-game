@@ -1018,6 +1018,30 @@ main {
 #ending-btn:hover  { background: #00ee55; }
 #ending-btn:active { transform: translateY(3px); border-bottom-width: 3px; }
 
+/* ── "The end." full-screen black slide ──────────────────────────────── */
+#ending-screen.the-end #ending-box {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  gap: 48px;
+}
+#ending-screen.the-end #ending-text-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-size: 2.8rem;
+  color: #ffffff;
+  text-shadow: 0 0 60px #ffffff55, 0 0 20px #ffffff33;
+  min-height: auto;
+  padding: 0;
+  letter-spacing: 6px;
+}
+#ending-screen.the-end #ending-btn {
+  font-size: 0.75rem;
+  padding: 14px 44px;
+}
+
 @keyframes playPulse {
   0%, 100% { box-shadow: 0 0 12px #00cc4488; }
   50%       { box-shadow: 0 0 32px #00cc44cc, 0 0 60px #00cc4444; }

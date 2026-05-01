@@ -462,32 +462,42 @@ function showLevelPopup(levelNum) {
 //   idx 2 → text card "Meanwhile..."
 //   idx 3 → storyline2_4.png
 //   idx 4 → storyline2_5.png
-//   idx 5 → text card "The End!"
-const ENDING_COUNT       = 6;
-const ENDING_MEANWHILE   = 2;   // "Meanwhile..." text card
-const ENDING_THE_END     = 5;   // "The End!"    text card
+//   idx 5 → storyline2_6.png
+//   idx 6 → storyline2_7.png
+//   idx 7 → storyline2_8.png
+//   idx 8 → full-screen black "The end."
+const ENDING_COUNT     = 9;
+const ENDING_MEANWHILE = 2;   // "Meanwhile..." text card
+const ENDING_THE_END   = 8;   // full-screen black final slide
 let _endingIdx = 0;
 
 function _showEndingFrame(idx) {
   _endingIdx = idx;
+  const screen   = document.getElementById('ending-screen');
+  const box      = document.getElementById('ending-box');
   const img      = document.getElementById('ending-img');
   const textCard = document.getElementById('ending-text-card');
   const titleEl  = document.getElementById('ending-title');
 
-  const isTextSlide = (idx === ENDING_MEANWHILE || idx === ENDING_THE_END);
+  // Reset full-screen mode from previous slide
+  screen.classList.remove('the-end');
+  if (titleEl) titleEl.style.display = 'none';
 
-  if (isTextSlide) {
+  if (idx === ENDING_THE_END) {
+    // Full-screen black "The end." — no box, no image
+    screen.classList.add('the-end');
     img.style.display      = 'none';
-    textCard.textContent   = idx === ENDING_MEANWHILE ? 'Meanwhile...' : 'The End! 🎉';
+    textCard.textContent   = 'The end.';
     textCard.style.display = 'flex';
-    if (titleEl) titleEl.style.display = 'none';
+  } else if (idx === ENDING_MEANWHILE) {
+    img.style.display      = 'none';
+    textCard.textContent   = 'Meanwhile...';
+    textCard.style.display = 'flex';
   } else {
-    // idx 0→file1, 1→file2, 3→file4, 4→file5 (idx+1 works for all image slides)
-    const fileNum = idx + 1;
-    img.src            = 'assets/storyline2_' + fileNum + '.png';
+    // Image slide — fileNum = idx + 1 works for all (skips 3 naturally since idx 2 = text)
+    img.src            = 'assets/storyline2_' + (idx + 1) + '.png';
     img.style.display  = 'block';
     textCard.style.display = 'none';
-    if (titleEl) titleEl.style.display = 'none';
   }
 
   document.getElementById('ending-btn').textContent =
